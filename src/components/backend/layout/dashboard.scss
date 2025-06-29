@@ -1,0 +1,129 @@
+// Variables
+$primary-color: #5C0655;
+$header-height: 70px;
+
+// Dashboard container
+.dashboard-container {
+  display: flex;
+  position: relative;
+  overflow-x: hidden;
+}
+
+// Sidebar styles
+.sidebar {
+  background-color: #fff;
+  padding: 10px;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 250px;
+  transition: all 0.3s ease;
+  z-index: 1000;
+  overflow-y: auto;
+
+  
+  &.closed {
+    transform: translateX(-100%);
+    width: 0;
+  }
+  
+  .sidebar-link {
+    color: #495057;
+    border-radius: 8px;
+    transition: all 0.3s;
+    
+    &:hover, &.active {
+      background-color: rgba($primary-color, 0.1);
+      color: $primary-color;
+    }
+    
+    &.active {
+      font-weight: 600;
+    }
+    
+    i {
+      transition: transform 0.3s;
+    }
+    
+    &:hover i {
+      transform: scale(1.1);
+    }
+  }
+}
+
+// Main content container
+.main-content-container {
+  flex: 1;
+  margin-left: 250px;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  
+  .sidebar.closed ~ & {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+
+// Header styles
+.header-admin {
+  background-color: #fff;
+  padding: 1rem;
+  height: $header-height;
+  position: sticky;
+  top: 0;
+  z-index: 99;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+// Content section
+.content-section {
+  flex: 1;
+  overflow-y: auto;
+  padding-top: 1.5rem;
+  background-color: #f8f9fa;
+}
+
+// Utility classes
+.text-purple {
+  color: $primary-color;
+}
+
+.bg-purple-light {
+  background-color: rgba($primary-color, 0.1);
+}
+
+.avatar-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: $primary-color;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+}
+
+// Dropdown styles
+.dropdown-menu {
+  .dropdown-item {
+    background-color: white;
+    color: $primary-color;
+    transition: background-color 0.3s, color 0.3s;
+    &:focus, &:hover {
+      background-color: $primary-color;
+      color: white;
+     
+
+      
+      i {
+        color: white !important;
+      }
+    }
+  }
+}

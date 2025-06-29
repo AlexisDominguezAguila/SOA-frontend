@@ -1,0 +1,276 @@
+// Variables
+$primary-color: #5c0655;
+$secondary-color: #4e494e80;
+$background-color: #ffffff;
+$text-color: #333;
+$text-white: #ffffff;
+$text-dark: #2d3748;
+$light-gray: #f8f9fa;
+
+@import url("https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&display=swap");
+
+body {
+  font-family: "Funnel Sans", sans-serif;
+  background-color: $background-color;
+  color: $text-color;
+  margin: 0;
+  padding: 0;
+}
+
+h1 {
+  font-size: 3.5rem;
+  font-weight: 800;
+}
+h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+}
+h3 {
+  font-size: 1.8rem;
+}
+p {
+  font-size: 1.1rem;
+  line-height: 1.8;
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: 12px 30px;
+  border-radius: 50px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  text-decoration: none;
+  border: 2px solid $primary-color;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background-color: $primary-color;
+  color: $text-white;
+}
+
+.btn-secondary {
+  background-color: transparent;
+  color: $text-white;
+  border-color: $text-white;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+header {
+  position: fixed;
+  width: 100%;
+  z-index: 1000;
+  padding: 15px 0;
+  display: flex;
+  justify-content: center;
+
+  .navbar {
+    background-color: rgba($background-color, 0.9);
+    border-radius: 50px;
+    width: 90%;
+    padding: 4px 22px;
+    box-shadow: 0 2px 10px rgba(#000, 0.1);
+  }
+
+  // ---- Logo
+  .navbar-brand img {
+    height: 60px;
+  }
+
+  // ---- Links principales y dropdown
+  .navbar-nav {
+    align-items: center;
+
+    .nav-link {
+      color: $text-dark;
+      text-transform: uppercase;
+      font-size: 1.2rem;
+      font-weight: 400;
+      padding: 0.75rem 1rem;
+      position: relative;
+
+      &:hover,
+      &.active {
+        color: #7b0f85;
+      }
+
+      &:hover::after,
+      &.active::after {
+        width: 100%;
+      }
+    }
+
+    .dropdown-toggle {
+      display: flex;
+      align-items: center;
+    }
+  }
+
+  // ---- Menú desplegable
+  .dropdown-menu {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(#000, 0.1);
+    margin-top: 0;
+  }
+}
+
+/* --------- Mobile tweaks --------- */
+@media (max-width: 992px) {
+  header {
+    .navbar-collapse {
+      background-color: rgba($background-color, 0.95);
+      border-radius: 20px;
+      padding: 15px;
+      margin-top: 10px;
+      box-shadow: 0 5px 15px rgba(#000, 0.1);
+    }
+
+    .navbar-nav .nav-link {
+      padding: 8px 0;
+
+      &::after {
+        display: none;
+      }
+    }
+  }
+}
+
+/* Ajustes para dispositivos móviles */
+@media (max-width: 992px) {
+  .navbar-collapse {
+    background-color: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 15px;
+    margin-top: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+
+  .nav-item {
+    height: auto;
+    padding: 8px 0;
+  }
+}
+
+// Hero
+.section-1 .hero {
+  background: linear-gradient(to top, rgba(92, 6, 85, 0.85), rgba(0, 0, 0, 0.7)),
+    url(../../assets/images/fondo-cmp.webp);
+  background-size: cover;
+  background-position: center;
+  min-height: 100vh;
+  color: $text-white;
+  text-align: center;
+  padding: 180px 20px 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .hero-subtitle {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.8rem;
+    font-weight: 500;
+    letter-spacing: 2px;
+    display: block;
+    margin-bottom: 15px;
+  }
+
+  .hero-title {
+    font-size: 4rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 30px;
+    text-transform: uppercase;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  }
+}
+
+// section de card de junta directiva
+
+.member-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border-radius: 1rem;
+}
+
+.member-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+.member-card img {
+  border-top-left-radius: 1rem;
+  border-top-right-radius: 1rem;
+  object-fit: cover;
+}
+//decanos
+
+.hero-section {
+  padding-top: 80px;
+  position: relative;
+}
+
+.scroll-indicator {
+  width: 30px;
+  height: 50px;
+  border: 2px solid white;
+  border-radius: 15px;
+  position: relative;
+  overflow: hidden;
+}
+
+.scroll-dot {
+  position: absolute;
+  width: 6px;
+  height: 10px;
+  background: white;
+  border-radius: 3px;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: scroll 1.5s infinite;
+}
+
+@keyframes scroll {
+  0% {
+    transform: translate(-50%, 0);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, 15px);
+    opacity: 0;
+  }
+}
+
+.btn-outline-light:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+@media (max-width: 992px) {
+  .display-2 {
+    font-size: 3.5rem;
+  }
+
+  .fs-1 {
+    font-size: 1.8rem;
+  }
+
+  .fs-2 {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .display-2 {
+    font-size: 2.8rem;
+  }
+}
+//cursos
+
+
