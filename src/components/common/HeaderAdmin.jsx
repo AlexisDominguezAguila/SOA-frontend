@@ -68,14 +68,27 @@ const HeaderAdmin = ({ toggleSidebar }) => {
             >
               <i className="bi bi-person me-2 text-purple"></i> Perfil
             </Dropdown.Item>
+
             <Dropdown.Item
               as={NavLink}
-              to="/admin/ajustes"
+              to="/admin/administradores"
               className="d-flex align-items-center"
             >
-              <i className="bi bi-gear me-2 text-purple"></i> Ajustes
+              <i className="bi bi-people me-2 text-purple"></i> Administradores
             </Dropdown.Item>
+
+            {/* 
+  <Dropdown.Item
+    as={NavLink}
+    to="/admin/ajustes"
+    className="d-flex align-items-center"
+  >
+    <i className="bi bi-gear me-2 text-purple"></i> Ajustes
+  </Dropdown.Item> 
+  */}
+
             <Dropdown.Divider />
+
             <Dropdown.Item
               as="button"
               className="d-flex align-items-center"

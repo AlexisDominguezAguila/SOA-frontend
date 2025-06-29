@@ -1,17 +1,16 @@
 import { useContext } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { AuthContext } from "@/components/backend/context/Auth";
 
 const RequiereAuth = ({ children }) => {
-  const { user } = useContext(AuthContext);
+  const { isAuthenticated, loading } = useContext(AuthContext);
   const location = useLocation();
 
-  // Si no hay usuario, redirigir al login
-  if (!user) {
+  if (loading) return null;
+  if (!isAuthenticated)
     return <Navigate to="/admin/login" state={{ from: location }} replace />;
-  }
 
-  return children;
+  return children ? children : <Outlet />;
 };
 
 export default RequiereAuth;

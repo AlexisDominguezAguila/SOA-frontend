@@ -4,11 +4,12 @@ import "@/components/backend/layout/dashboard.scss"; // importa estilos
 const links = [
   { to: "/admin/dashboard", icon: "house-door", label: "Inicio" },
   { to: "/admin/noticias", icon: "calendar-event", label: "Noticias" },
-  { to: "/admin/cursos", icon: "people", label: "Cursos" },
-  { to: "/admin/decanos", icon: "gear", label: "Directiva - Decanos" },
-  { to: "/admin/beneficios", icon: "file-earmark-text", label: "Beneficios" },
-  // { to: "#", icon: "calendar-event", label: "Eventos" },
-  // { to: "#", icon: "chat-dots", label: "Comunicados" },
+  { to: "/admin/cursos", icon: "mortarboard", label: "Cursos" },
+  { to: "/admin/decanos", icon: "award", label: "Past de Decanos" },
+  { to: "/admin/convenios", icon: "file-earmark-text", label: "Convenios" },
+  { to: "/admin/directivas", icon: "people-fill", label: "Juntas Directivas" },
+  { to: "/admin/centros", icon: "tree", label: "Centros Recreacionales" },
+  { to: "/admin/comunicados", icon: "megaphone", label: "Comunicados" },
 ];
 
 const Sidebar = ({ isOpen }) => (

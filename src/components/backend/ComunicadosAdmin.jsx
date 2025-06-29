@@ -3,7 +3,7 @@ import DashboardHeader from "@/components/common/HeaderAdmin";
 import DashboardSidebar from "@/components/common/Sidebar";
 import "@/components/backend/layout/dashboard.scss";
 
-const BeneficiosAdmin = () => {
+const ComunicadosAdmin = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
 
@@ -19,11 +19,11 @@ const BeneficiosAdmin = () => {
 
         {/* Contenido */}
         <section className="content-section p-4">
-          <h2 className="text-purple mb-4">Panel de Control de Beneficios</h2>
+          <h2 className="text-purple mb-4">Comunicados</h2>
         </section>
       </div>
     </div>
   );
 };
 
-export default BeneficiosAdmin;
+export default ComunicadosAdmin;

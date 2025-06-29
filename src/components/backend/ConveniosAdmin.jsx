@@ -3,7 +3,7 @@ import DashboardHeader from "@/components/common/HeaderAdmin";
 import DashboardSidebar from "@/components/common/Sidebar";
 import "@/components/backend/layout/dashboard.scss";
 
-const Dashboard = () => {
+const ConveniosAdmin = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
 
@@ -19,13 +19,11 @@ const Dashboard = () => {
 
         {/* Contenido */}
         <section className="content-section p-4">
-          <h2 className="text-purple mb-4">Panel de Control</h2>
-
-          {/* Más contenido... */}
+          <h2 className="text-purple mb-4">Convenios</h2>
         </section>
       </div>
     </div>
   );
 };
 
-export default Dashboard;
+export default ConveniosAdmin;

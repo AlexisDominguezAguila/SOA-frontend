@@ -21,8 +21,11 @@ import RequiereAuth from "@/components/common/RequiereAuth";
 import Dashboard from "@/components/backend/Dashboard";
 import NoticiasAdmin from "./components/backend/NoticiasAdmin";
 import CursosAdmin from "./components/backend/CursosAdmin";
-import DirectivaDecanos from "./components/backend/DirectivaDecanos";
-import BeneficiosAdmin from "./components/backend/BeneficiosAdmin";
+import DecanosAdmin from "./components/backend/DecanosAdmin";
+import ConveniosAdmin from "./components/backend/ConveniosAdmin";
+import DirectivasAdmin from "./components/backend/DirectivasAdmin";
+import CentrosAdmin from "./components/backend/CentrosAdmin";
+import ComunicadosAdmin from "./components/backend/ComunicadosAdmin";
 
 import "@/assets/css/style.scss";
 
@@ -71,15 +74,39 @@ function App() {
             path="/admin/decanos"
             element={
               <RequiereAuth>
-                <DirectivaDecanos />
+                <DecanosAdmin />
               </RequiereAuth>
             }
           />
           <Route
-            path="/admin/beneficios"
+            path="/admin/convenios"
             element={
               <RequiereAuth>
-                <BeneficiosAdmin />
+                <ConveniosAdmin />
+              </RequiereAuth>
+            }
+          />
+          <Route
+            path="/admin/directivas"
+            element={
+              <RequiereAuth>
+                <DirectivasAdmin />
+              </RequiereAuth>
+            }
+          />
+          <Route
+            path="/admin/centros"
+            element={
+              <RequiereAuth>
+                <CentrosAdmin />
+              </RequiereAuth>
+            }
+          />
+          <Route
+            path="/admin/comunicados"
+            element={
+              <RequiereAuth>
+                <ComunicadosAdmin />
               </RequiereAuth>
             }
           />

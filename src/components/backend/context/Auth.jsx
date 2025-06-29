@@ -1,42 +1,48 @@
 import { createContext, useState, useEffect } from "react";
+import api from "@/services/api";
+import { logoutSilent } from "@/utils/auth-helpers";
+
 export const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Al montar el componente, verificar si hay datos de usuario en localStorage
+  /* ───────────────── Rehidratación ───────────────── */
   useEffect(() => {
-    const storedUser = localStorage.getItem("userInfo");
-    if (storedUser) {
+    const stored = localStorage.getItem("userInfo");
+    if (stored) {
       try {
-        setUser(JSON.parse(storedUser));
+        const parsed = JSON.parse(stored);
+        setUser(parsed);
+        api.defaults.headers.common.Authorization = `Bearer ${parsed.token}`;
       } catch (e) {
-        console.error("Error parsing user data:", e);
-        logout();
+        console.error("Error al parsear userInfo:", e);
+        logoutSilent();
       }
     }
+    setLoading(false);
   }, []);
 
+  /* ───────────────── API pública ─────────────────── */
   const login = (userData) => {
     setUser(userData);
-    // Guardar como string JSON
     localStorage.setItem("userInfo", JSON.stringify(userData));
+    api.defaults.headers.common.Authorization = `Bearer ${userData.token}`;
   };
 
   const logout = () => {
-    setUser(null);
-    localStorage.removeItem("userInfo");
-    // Redirigir al login después de cerrar sesión
-    window.location.href = "/admin/login";
+    logoutSilent();
   };
 
   return (
     <AuthContext.Provider
       value={{
         user,
+        isAuthenticated: !!user,
+        loading,
         login,
         logout,
-        isAuthenticated: !!user,
       }}
     >
       {children}

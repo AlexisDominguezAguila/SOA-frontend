@@ -1,14 +1,18 @@
+// src/components/backend/Login.jsx
 import React, { useState, useContext } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
+
 import { AuthContext } from "@/components/backend/context/Auth";
+import api from "@/services/api";
 import Logo from "@/assets/images/icono.webp";
 
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useContext(AuthContext);
+
   const from = location.state?.from?.pathname || "/admin/dashboard";
 
   const [loading, setLoading] = useState(false);
@@ -20,29 +24,26 @@ const Login = () => {
     formState: { errors },
   } = useForm();
 
+  /* ─────────────── envío del formulario ─────────────── */
   const onSubmit = async (data) => {
     setLoading(true);
-    try {
-      const res = await fetch("http://localhost:8000/api/authenticate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
 
-      const result = await res.json();
+    try {
+      const res = await api.post("/authenticate", data);
+      const result = res.data;
 
       if (!result.status) {
         toast.error(result.message);
-      } else {
-        const userInfo = {
-          id: result.id,
-          token: result.token,
-          name: result.name || "Admin",
-        };
-        login(userInfo);
-        reset();
-        navigate(from, { replace: true });
+        return;
       }
+
+      const { token, user } = result.data;
+
+      const userInfo = { ...user, token };
+      login(userInfo);
+
+      reset();
+      navigate(from, { replace: true });
     } catch (err) {
       toast.error("Error al conectar con el servidor.");
     } finally {
@@ -66,6 +67,7 @@ const Login = () => {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)}>
+          {/* email */}
           <div style={styles.formGroup}>
             <label htmlFor="email" style={styles.label}>
               <i className="bi bi-envelope-fill" style={styles.icon}></i> Email
@@ -88,6 +90,7 @@ const Login = () => {
             )}
           </div>
 
+          {/* password */}
           <div style={styles.formGroup}>
             <label htmlFor="password" style={styles.label}>
               <i className="bi bi-lock-fill" style={styles.icon}></i> Contraseña
@@ -99,10 +102,7 @@ const Login = () => {
               style={styles.input}
               {...register("password", {
                 required: "La contraseña es obligatoria",
-                minLength: {
-                  value: 6,
-                  message: "Mínimo 6 caracteres",
-                },
+                minLength: { value: 6, message: "Mínimo 6 caracteres" },
               })}
             />
             {errors.password && (
