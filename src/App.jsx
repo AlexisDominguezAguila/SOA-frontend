@@ -26,6 +26,7 @@ import ConveniosAdmin from "./components/backend/ConveniosAdmin";
 import DirectivasAdmin from "./components/backend/DirectivasAdmin";
 import CentrosAdmin from "./components/backend/CentrosAdmin";
 import ComunicadosAdmin from "./components/backend/ComunicadosAdmin";
+import PerfilAdmin from "./components/backend/PerfilAdmin";
 
 import "@/assets/css/style.scss";
 
@@ -107,6 +108,14 @@ function App() {
             element={
               <RequiereAuth>
                 <ComunicadosAdmin />
+              </RequiereAuth>
+            }
+          />
+          <Route
+            path="/admin/perfil"
+            element={
+              <RequiereAuth>
+                <PerfilAdmin />
               </RequiereAuth>
             }
           />
