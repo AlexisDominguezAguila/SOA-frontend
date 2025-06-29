@@ -50,6 +50,24 @@ const DUMMY_DATA = [
     status: "inactive",
     created_at: "2024-01-05",
   },
+  {
+    id: 4,
+    img: convenio,
+    title: "Instituto Tecnológico Z",
+    bullets: ["Certificaciones gratuitas", "Cursos especializados"],
+    url: "https://institutoz.edu",
+    status: "inactive",
+    created_at: "2024-01-05",
+  },
+  {
+    id: 5,
+    img: convenio,
+    title: "Instituto Tecnológico Z",
+    bullets: ["Certificaciones gratuitas", "Cursos especializados"],
+    url: "https://institutoz.edu",
+    status: "inactive",
+    created_at: "2024-01-05",
+  },
 ];
 
 const ConveniosAdmin = () => {
@@ -82,7 +100,7 @@ const ConveniosAdmin = () => {
   });
 
   // paginación cliente‑side: 5 por página
-  const pageSize = 5;
+  const pageSize = 4;
   const [page, setPage] = useState(1);
   const pages = Math.ceil(filtered.length / pageSize);
   const view = filtered.slice((page - 1) * pageSize, page * pageSize);
