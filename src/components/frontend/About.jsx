@@ -38,7 +38,7 @@ const JuntaDirectiva = () => {
             {/* encabezado + filtro */}
             <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-5">
               <h2 className="fw-bold mb-3 mb-md-0" style={{ color: "#5c0655" }}>
-                Junta Directiva
+                Miembros de la gestión 2024 - 2027
               </h2>
 
               <select

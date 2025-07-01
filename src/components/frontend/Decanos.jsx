@@ -7,22 +7,12 @@ const decanos = [
   {
     nombre: "Dr. Juan Pérez",
     periodo: "2010 – 2014",
-    imagen: "../../assets/images/doctor.webp",
+    imagen: Decano,
   },
   {
     nombre: "Dra. María López",
     periodo: "2014 – 2018",
-    imagen: "../../assets/images/doctor.webp",
-  },
-  {
-    nombre: "Dr. Carlos Sánchez",
-    periodo: "2018 – 2022",
-    imagen: "/img/decanos/carlos_sanchez.jpg",
-  },
-  {
-    nombre: "Dra. Ana Torres",
-    periodo: "2022 – Presente",
-    imagen: "/img/decanos/ana_torres.jpg",
+    imagen: Decano,
   },
 ];
 
