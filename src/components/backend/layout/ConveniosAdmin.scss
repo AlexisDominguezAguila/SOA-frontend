@@ -19,9 +19,7 @@ $border-color: #e1e1e1;
   background-color: $text-purple;
   border: none;
   font-weight: 500;
-  &:hover {
-    background-color: darken($text-purple, 5%);
-  }
+
 }
 
 .stats-card {
@@ -185,9 +183,7 @@ $border-color: #e1e1e1;
     .btn-save {
       background-color: $text-purple;
       border: none;
-      &:hover {
-        background-color: darken($text-purple, 5%);
-      }
+
     }
     .btn-cancel {
       color: #333;
