@@ -28,10 +28,13 @@ export const AuthProvider = ({ children }) => {
   const login = (userData) => {
     setUser(userData);
     localStorage.setItem("userInfo", JSON.stringify(userData));
-    api.defaults.headers.common.Authorization = `Bearer ${userData.token}`;
+    // api.defaults.headers.common.Authorization = `Bearer ${userData.token}`;
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await api.post("/logout");
+    } catch (_) {}
     logoutSilent();
   };
 

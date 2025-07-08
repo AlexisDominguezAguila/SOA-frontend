@@ -12,7 +12,6 @@ import {
   Col,
 } from "react-bootstrap";
 
-import DashboardHeader from "@/components/common/HeaderAdmin";
 import DashboardSidebar from "@/components/common/Sidebar";
 import "@/components/backend/layout/dashboard.scss";
 
@@ -81,71 +80,116 @@ const CursosAdmin = () => {
   return (
     <div className="dashboard-container min-vh-100">
       <DashboardSidebar isOpen={isSidebarOpen} />
-      <div className="main-content-container">
-        <DashboardHeader toggleSidebar={toggleSidebar} />
+      <main className="main-content-container">
         <section className="content-section p-4">
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <div>
-              <h2 className="text-purple mb-1">
-                <i className="bi bi-easel2-fill me-2"></i>Gestión de Cursos
-              </h2>
-              <p className="text-muted mb-0">
-                Administra los cursos y talleres ofrecidos
-              </p>
+          {/* Header mejorado */}
+          <div className="page-header mb-5">
+            <div className="header-content">
+              <div className="header-info">
+                <h1 className="page-title">Gestión de Cursos</h1>
+                <p className="page-subtitle">
+                  Administra y publica los cursos institucionales de manera
+                  eficiente
+                </p>
+                <div className="header-stats">
+                  <span className="stat-item">
+                    <i className="bi bi-file-text"></i>
+                    {data.length} Noticias totales
+                  </span>
+                  <span className="stat-item">
+                    <i className="bi bi-check-circle"></i>
+                    {data.filter((n) => n.status === "active").length}{" "}
+                    Publicadas
+                  </span>
+                  <span className="stat-item ">
+                    <i className="bi bi-x-circle me-1"></i>
+                    {data.filter((n) => n.status === "inactive").length} Sin
+                    revisar
+                  </span>
+                </div>
+              </div>
+              <div className="header-actions">
+                <Button className="btn-primary-custom" onClick={handleShow}>
+                  <i className="bi bi-plus-lg me-2"></i>
+                  Nueva Noticia
+                </Button>
+              </div>
             </div>
-            <Button className="btn-add-convenio" onClick={handleShow}>
-              <i className="bi bi-plus-lg me-2"></i>Nuevo Curso
-            </Button>
           </div>
 
-          {/* Filtros */}
-          <Card className="mb-4">
-            <Card.Body>
-              <Row>
-                <Col md={6}>
-                  <InputGroup>
-                    <InputGroup.Text>
-                      <i className="bi bi-search"></i>
-                    </InputGroup.Text>
-                    <Form.Control
-                      placeholder="Buscar por título"
-                      value={query}
-                      onChange={(e) => {
-                        setQuery(e.target.value);
-                        setPage(1);
-                      }}
-                    />
-                  </InputGroup>
+          {/* Filtros mejorados */}
+          <Card className="filter-card mb-4">
+            <Card.Body className="p-4">
+              <div className="filters-header mb-3">
+                <h5 className="filters-title">
+                  <i className="bi bi-funnel me-2"></i>
+                  Filtros de búsqueda
+                </h5>
+              </div>
+              <Row className="g-3">
+                <Col lg={5} md={6}>
+                  <div className="search-input-wrapper">
+                    <InputGroup className="search-input">
+                      <InputGroup.Text className="search-icon">
+                        <i className="bi bi-search"></i>
+                      </InputGroup.Text>
+                      <Form.Control
+                        placeholder="Buscar por título de curso..."
+                        value={query}
+                        onChange={(e) => {
+                          setQuery(e.target.value);
+                          setPage(1);
+                        }}
+                        className="search-field"
+                      />
+                    </InputGroup>
+                  </div>
                 </Col>
-                <Col md={4}>
+                <Col lg={3} md={4}>
                   <Form.Select
                     value={statusFilter}
                     onChange={(e) => {
                       setStatusFilter(e.target.value);
                       setPage(1);
                     }}
+                    className="status-filter"
                   >
-                    <option value="all">Todos los estados</option>
-                    <option value="active">Activos</option>
-                    <option value="inactive">Inactivos</option>
+                    <option value="all">
+                      <i className="bi bi-newspaper me-3"></i> Todos los estados
+                    </option>
+                    <option value="active">
+                      <i className="bi bi-newspaper me-3"></i> Aprobadas
+                    </option>
+                    <option value="inactive">
+                      <i className="bi bi-newspaper me-3"></i> Pendientes
+                    </option>
                   </Form.Select>
                 </Col>
-                <Col md={2}>
+                <Col lg={2} md={2}>
                   <Button
-                    variant="outline-secondary"
+                    className="btn-clear-filters"
                     onClick={() => {
                       setQuery("");
                       setStatusFilter("all");
                       setPage(1);
                     }}
                   >
+                    <i className="bi bi-arrow-clockwise me-1"></i>
                     Limpiar
                   </Button>
+                </Col>
+                <Col lg={2} md={12}>
+                  <div className="results-info">
+                    <span className="stat-item ">
+                      <i className="bi bi-list-check me-1"></i>
+                      {filtered.length} resultado
+                      {filtered.length !== 1 ? "s" : ""}
+                    </span>
+                  </div>
                 </Col>
               </Row>
             </Card.Body>
           </Card>
-
           {/* Tabla */}
           <Table responsive hover className="table-borderless">
             <thead className="table-light">
@@ -232,7 +276,7 @@ const CursosAdmin = () => {
             </Pagination>
           )}
         </section>
-      </div>
+      </main>
 
       {/* Modal */}
       <Modal show={showModal} onHide={handleClose} size="lg" centered>

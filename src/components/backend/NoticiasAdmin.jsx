@@ -17,7 +17,6 @@ import {
 } from "react-bootstrap";
 import DashboardSidebar from "@/components/common/Sidebar";
 import "@/components/backend/layout/dashboard.scss";
-import "@/components/backend/layout/NoticiasAdmin.scss";
 
 import defaultImg from "@/assets/images/noticia.webp";
 
@@ -32,39 +31,6 @@ const DUMMY_DATA = [
     url: "https://noticia1.com",
     status: "active",
     created_at: "2024-05-10",
-  },
-  {
-    id: 2,
-    img: defaultImg,
-    title: "Convenio con Universidad Nacional",
-    description:
-      "Se firmó un convenio con la universidad para becas estudiantiles.",
-    bullets: ["Becas", "Cursos gratuitos"],
-    url: "https://noticia2.com",
-    status: "inactive",
-    created_at: "2024-04-28",
-  },
-  {
-    id: 3,
-    img: defaultImg,
-    title: "Programa de Innovación Tecnológica",
-    description:
-      "Nuevo programa para fomentar la innovación en el sector educativo.",
-    bullets: ["Capacitación", "Recursos digitales", "Mentorías"],
-    url: "https://noticia3.com",
-    status: "active",
-    created_at: "2024-05-15",
-  },
-  {
-    id: 4,
-    img: defaultImg,
-    title: "Conferencia Internacional de Educación",
-    description:
-      "Evento que reunirá a expertos en educación de toda Latinoamérica.",
-    bullets: ["Networking", "Conferencias magistrales", "Talleres prácticos"],
-    url: "https://noticia4.com",
-    status: "active",
-    created_at: "2024-05-20",
   },
 ];
 
@@ -121,11 +87,7 @@ const NoticiasAdmin = () => {
   };
 
   return (
-    <div
-      className={`dashboard-container ${
-        isSidebarOpen ? "sidebar-open" : "sidebar-closed"
-      }`}
-    >
+    <div className="dashboard-container min-vh-100">
       <DashboardSidebar isOpen={isSidebarOpen} />
 
       <main className="main-content-container">
@@ -146,7 +108,13 @@ const NoticiasAdmin = () => {
                   </span>
                   <span className="stat-item">
                     <i className="bi bi-check-circle"></i>
-                    {data.filter((n) => n.status === "active").length} Activas
+                    {data.filter((n) => n.status === "active").length}{" "}
+                    Publicadas
+                  </span>
+                  <span className="stat-item ">
+                    <i className="bi bi-x-circle me-1"></i>
+                    {data.filter((n) => n.status === "inactive").length} Sin
+                    revisar
                   </span>
                 </div>
               </div>
@@ -160,7 +128,7 @@ const NoticiasAdmin = () => {
           </div>
 
           {/* Filtros mejorados */}
-          <Card className="filters-card mb-4">
+          <Card className="filter-card mb-4">
             <Card.Body className="p-4">
               <div className="filters-header mb-3">
                 <h5 className="filters-title">
@@ -200,10 +168,10 @@ const NoticiasAdmin = () => {
                       <i className="bi bi-newspaper me-3"></i> Todos los estados
                     </option>
                     <option value="active">
-                      <i className="bi bi-newspaper me-3"></i> Activas
+                      <i className="bi bi-newspaper me-3"></i> Aprobadas
                     </option>
                     <option value="inactive">
-                      <i className="bi bi-newspaper me-3"></i> Inactivas
+                      <i className="bi bi-newspaper me-3"></i> Pendientes
                     </option>
                   </Form.Select>
                 </Col>
@@ -222,7 +190,8 @@ const NoticiasAdmin = () => {
                 </Col>
                 <Col lg={2} md={12}>
                   <div className="results-info">
-                    <span className="results-count">
+                    <span className="stat-item ">
+                      <i className="bi bi-list-check me-1"></i>
                       {filtered.length} resultado
                       {filtered.length !== 1 ? "s" : ""}
                     </span>
@@ -251,128 +220,146 @@ const NoticiasAdmin = () => {
                       <th className="table-header-cell">Información</th>
                       <th className="table-header-cell">Beneficios</th>
                       <th className="table-header-cell">Estado</th>
-                      <th className="table-header-cell">Fecha</th>
                       <th className="table-header-cell text-center">
                         Acciones
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {view.map((n, i) => (
-                      <tr key={n.id} className="table-row">
-                        <td className="table-cell">
-                          <span className="row-number">
-                            {(page - 1) * pageSize + i + 1}
-                          </span>
-                        </td>
-                        <td className="table-cell">
-                          <div className="news-preview">
-                            <img
-                              src={n.img || "/placeholder.svg"}
-                              alt={n.title}
-                              className="news-image"
-                            />
-                          </div>
-                        </td>
-                        <td className="table-cell">
-                          <div className="news-info">
-                            <h6 className="news-title">{n.title}</h6>
-                            <p className="news-description">{n.description}</p>
-                            <a
-                              href={n.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="news-link"
-                            >
-                              <i className="bi bi-box-arrow-up-right me-1"></i>
-                              Ver noticia completa
-                            </a>
-                          </div>
-                        </td>
-                        <td className="table-cell">
-                          <div className="benefits-list">
-                            {n.bullets.map((b, idx) => (
-                              <span key={idx} className="benefit-tag">
-                                <i className="bi bi-check2"></i>
-                                {b}
+                    {view.map(
+                      (n, i) => (
+                        <tr key={n.id} className="table-row">
+                          <td className="table-cell">
+                            <span className="row-number">
+                              {(page - 1) * pageSize + i + 1}
+                            </span>
+                          </td>
+                          <td className="table-cell">
+                            <div className="rect-image-container">
+                              <img
+                                src={n.img || "/placeholder.svg"}
+                                alt={n.title}
+                                className="table-image"
+                              />
+                            </div>
+                          </td>
+                          <td className="table-cell">
+                            <div>
+                              <h6 className="table-title">{n.title}</h6>
+                              <span className="date-info">
+                                <i className="bi bi-calendar3 me-1"></i>
+                                {formatDate(n.created_at)}
                               </span>
-                            ))}
-                          </div>
-                        </td>
-                        <td className="table-cell">
-                          {getStatusBadge(n.status)}
-                        </td>
-                        <td className="table-cell">
-                          <span className="date-info">
-                            <i className="bi bi-calendar3 me-1"></i>
-                            {formatDate(n.created_at)}
-                          </span>
-                        </td>
-                        <td className="table-cell text-center">
-                          <div className="action-buttons">
-                            <Button
-                              size="sm"
-                              className="btn-action-edit me-2"
-                              onClick={() => handleEdit(n)}
-                              title="Editar noticia"
-                            >
-                              <i className="bi bi-pencil-square"></i>
-                            </Button>
-                            <Button
-                              size="sm"
-                              className="btn-action-delete"
-                              title="Eliminar noticia"
-                            >
-                              <i className="bi bi-trash3"></i>
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                            </div>
+                          </td>
+                          <td className="table-cell">
+                            <div className="tag-list">
+                              {n.bullets.map((b, idx) => (
+                                <span key={idx} className="table-tag">
+                                  <i className="bi bi-check2"></i>
+                                  {b}
+                                </span>
+                              ))}
+                            </div>
+                          </td>
+                          <td className="table-cell">
+                            <span className="status-badge status-published">
+                              Publicada
+                            </span>
+                          </td>
+
+                          <td className="table-cell text-center">
+                            <div className="action-buttons">
+                              {/* Botón para ver la noticia completa */}
+                              <Button
+                                size="sm"
+                                className="btn-action btn-view"
+                                onClick={() => window.open(n.url, "_blank")}
+                                title="Ver noticia completa"
+                              >
+                                <i className="bi bi-box-arrow-up-right"></i>
+                              </Button>
+
+                              <Button
+                                size="sm"
+                                className="btn-action btn-edit"
+                                onClick={() => handleEdit(n)}
+                                title="Editar noticia"
+                              >
+                                <i className="bi bi-pencil-square"></i>
+                              </Button>
+
+                              <Button
+                                size="sm"
+                                className="btn-action btn-delete"
+                                title="Eliminar noticia"
+                              >
+                                <i className="bi bi-trash3"></i>
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                      // ))
+                      // ) : (
+                      //   <tr>
+                      //     <td colSpan="6" className="text-center py-5">
+                      //       <div className="empty-state">
+                      //         <i className="bi bi-inbox"></i>
+                      //         <h5>No se encontraron decanos</h5>
+                      //         <p>
+                      //           {query
+                      //             ? "Intenta con otros términos de búsqueda"
+                      //             : "Comienza agregando un nuevo decano"}
+                      //         </p>
+                      //       </div>
+                      //     </td>
+                      //   </tr>
+                    )}
                   </tbody>
                 </Table>
               </div>
-
-              {/* Paginación mejorada */}
-              {pages > 1 && (
-                <div className="pagination-wrapper p-4">
-                  <div className="pagination-info">
-                    <span className="pagination-text">
-                      Mostrando {(page - 1) * pageSize + 1} -{" "}
-                      {Math.min(page * pageSize, filtered.length)} de{" "}
-                      {filtered.length} noticias
-                    </span>
-                  </div>
-                  <Pagination className="custom-pagination mb-0">
-                    <Pagination.Prev
-                      disabled={page === 1}
-                      onClick={() => setPage(page - 1)}
-                      className="pagination-control"
-                    >
-                      <i className="bi bi-chevron-left"></i>
-                    </Pagination.Prev>
-                    {[...Array(pages)].map((_, i) => (
-                      <Pagination.Item
-                        key={i}
-                        active={page === i + 1}
-                        onClick={() => setPage(i + 1)}
-                        className="pagination-item"
-                      >
-                        {i + 1}
-                      </Pagination.Item>
-                    ))}
-                    <Pagination.Next
-                      disabled={page === pages}
-                      onClick={() => setPage(page + 1)}
-                      className="pagination-control"
-                    >
-                      <i className="bi bi-chevron-right"></i>
-                    </Pagination.Next>
-                  </Pagination>
-                </div>
-              )}
             </Card.Body>
           </Card>
+
+          {/* Paginación mejorada */}
+          {pages > 1 && (
+            <div className="pagination-wrapper p-4">
+              <div className="pagination-info">
+                <span className="pagination-text">
+                  Mostrando {(page - 1) * pageSize + 1} -{" "}
+                  {Math.min(page * pageSize, filtered.length)} de{" "}
+                  {filtered.length} noticias
+                </span>
+              </div>
+              <Pagination className="custom-pagination mb-0">
+                <Pagination.Prev
+                  disabled={page === 1}
+                  onClick={() => setPage(page - 1)}
+                  className="pagination-control"
+                >
+                  <i className="bi bi-chevron-left"></i>
+                </Pagination.Prev>
+                {[...Array(pages)].map((_, i) => (
+                  <Pagination.Item
+                    key={i}
+                    active={page === i + 1}
+                    onClick={() => setPage(i + 1)}
+                    className="pagination-item"
+                  >
+                    {i + 1}
+                  </Pagination.Item>
+                ))}
+                <Pagination.Next
+                  disabled={page === pages}
+                  onClick={() => setPage(page + 1)}
+                  className="pagination-control"
+                >
+                  <i className="bi bi-chevron-right"></i>
+                </Pagination.Next>
+              </Pagination>
+            </div>
+          )}
         </section>
       </main>
       {/* Modal mejorado */}

@@ -27,25 +27,28 @@ const Login = () => {
   /* ─────────────── envío del formulario ─────────────── */
   const onSubmit = async (data) => {
     setLoading(true);
-
     try {
-      const res = await api.post("/authenticate", data);
-      const result = res.data;
+      const { data: result } = await api.post("/authenticate", data);
 
       if (!result.status) {
         toast.error(result.message);
         return;
       }
 
-      const { token, user } = result.data;
-
-      const userInfo = { ...user, token };
+      const { access_token, token_type, user } = result.data;
+      const userInfo = { ...user, token: access_token, tokenType: token_type };
       login(userInfo);
 
       reset();
       navigate(from, { replace: true });
     } catch (err) {
-      toast.error("Error al conectar con el servidor.");
+      if (err.response?.status === 422) {
+        toast.error("Datos incompletos o inválidos.");
+      } else if (err.response?.status === 401) {
+        toast.error("Credenciales incorrectas.");
+      } else {
+        toast.error("Error al conectar con el servidor.");
+      }
     } finally {
       setLoading(false);
     }
