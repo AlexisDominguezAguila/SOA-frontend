@@ -1,14 +1,24 @@
-import React, { useState } from "react";
-import { Modal, Button } from "react-bootstrap";
+import React, { useState, useEffect } from "react";
+import { Modal, Button, Carousel } from "react-bootstrap";
 
 import { BiCalendar, BiUser, BiTime, BiShow } from "react-icons/bi";
 import JuntaCMP from "@/assets/images/about.webp";
 import NoticiaCMP from "@/assets/images/NoticiaEjp.webp";
+import Aviso from "@/assets/images/convenio.jpeg";
 import { Link } from "react-router-dom";
 import Header from "@/components/common/Header";
 import Footer from "@/components/common/Footer";
+import api from "@/services/api";
 
 const Home = () => {
+  const [news, setNews] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [showHimno, setShowHimno] = useState(false);
+  const [showAvisos, setShowAvisos] = useState(false);
+
+  const avisos = [Aviso];
+  const totalAvisos = avisos.length;
+
   // Beneficios y valores de la junta directiva
   const beneficios = [
     "Representación profesional ante instituciones públicas y privadas",
@@ -59,10 +69,59 @@ const Home = () => {
       enlace: "https://ayni.cmp.org.pe/",
     },
   ];
-  const [showModal, setShowModal] = useState(false);
 
-  const handleOpenModal = () => setShowModal(true);
-  const handleCloseModal = () => setShowModal(false);
+  const openHimno = () => setShowHimno(true);
+  const closeHimno = () => setShowHimno(false);
+  const openAvisos = () => setShowAvisos(true);
+  const closeAvisos = () => setShowAvisos(false);
+
+  // Obtener la ultima noticia
+  useEffect(() => {
+    const fetchLatestNews = async () => {
+      try {
+        setLoading(true);
+        const { data } = await api.get("/public/news", {
+          params: { per_page: 1, sort: "created_at:desc" },
+        });
+
+        const latest = Array.isArray(data)
+          ? data[0]
+          : data.data?.[0] || data?.[0] || null;
+
+        setNews(latest);
+      } catch (err) {
+        console.error("Error al cargar la última noticia", err);
+        setNews(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLatestNews();
+  }, []);
+
+  // Función para truncar
+  const truncate = (text = "", wordLimit = 60) => {
+    if (!text) return ""; // Manejar texto vacío
+    const words = text.trim().split(/\s+/);
+    return words.length > wordLimit
+      ? `${words.slice(0, wordLimit).join(" ")}…`
+      : text;
+  };
+
+  // Formatear fecha
+  const formatDate = (iso) => {
+    if (!iso) return "Fecha no disponible";
+    try {
+      return new Date(iso).toLocaleDateString("es-PE", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+      });
+    } catch {
+      return "Fecha inválida";
+    }
+  };
 
   return (
     <>
@@ -87,7 +146,7 @@ const Home = () => {
                     boxShadow: "0 10px 20px rgba(0,0,0,0.2)",
                     transition: "all 0.3s ease",
                   }}
-                  onClick={handleOpenModal}
+                  onClick={openHimno}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.transform = "translateY(-5px)";
                     e.currentTarget.style.boxShadow =
@@ -106,15 +165,16 @@ const Home = () => {
             </div>
           </div>
         </section>
+        {/* ---------- MODAL HIMNO ---------- */}
         <Modal
-          show={showModal}
-          onHide={handleCloseModal}
+          show={showHimno}
+          onHide={closeHimno}
           size="lg"
           centered
           backdrop="static"
         >
           <Modal.Header closeButton>
-            <Modal.Title>Himno - Colegio Médico del Perú</Modal.Title>
+            <Modal.Title>Himno – Colegio Médico del Perú</Modal.Title>
           </Modal.Header>
           <Modal.Body className="p-0">
             <div className="ratio ratio-16x9">
@@ -124,11 +184,11 @@ const Home = () => {
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
                 style={{ border: 0 }}
-              ></iframe>
+              />
             </div>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={handleCloseModal}>
+            <Button variant="secondary" onClick={closeHimno}>
               Cerrar
             </Button>
           </Modal.Footer>
@@ -277,7 +337,7 @@ const Home = () => {
             overflow: "hidden",
           }}
         >
-          {/* Elemento decorativo de fondo */}
+          {/* Decoración */}
           <div
             style={{
               position: "absolute",
@@ -294,17 +354,15 @@ const Home = () => {
 
           <div className="container position-relative" style={{ zIndex: 2 }}>
             <div className="row g-0 rounded-4 overflow-hidden shadow-lg">
+              {/* Imagen destacada */}
               <div className="col-lg-6">
                 <div
                   className="featured-news-image-container overflow-hidden"
-                  style={{
-                    height: "100%",
-                    position: "relative",
-                  }}
+                  style={{ height: "100%", position: "relative" }}
                 >
                   <img
-                    src={NoticiaCMP}
-                    alt="Noticia destacada"
+                    src={news?.image_url || NoticiaCMP}
+                    alt={news?.title || "Noticia destacada"}
                     className="img-fluid w-100 h-100"
                     style={{
                       objectFit: "cover",
@@ -328,9 +386,11 @@ const Home = () => {
                         "linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%)",
                       zIndex: 1,
                     }}
-                  ></div>
+                  />
                 </div>
               </div>
+
+              {/* Contenido de la noticia */}
               <div className="col-lg-6 bg-white">
                 <div className="p-4 p-lg-5 h-100 d-flex flex-column">
                   <span
@@ -348,65 +408,65 @@ const Home = () => {
                       letterSpacing: "1px",
                     }}
                   >
-                    <i className="bi bi-star-fill me-2"></i> Destacado
+                    <i className="bi bi-star-fill me-2" /> Destacado
                   </span>
-                  <h2
-                    className="featured-news-title mb-3"
-                    style={{
-                      fontSize: "2.25rem",
-                      fontWeight: "800",
-                      lineHeight: "1.2",
-                      background:
-                        "linear-gradient(90deg,rgb(22, 23, 24) 0%,rgb(79, 18, 119) 100%)",
-                      WebkitBackgroundClip: "text",
-                      backgroundClip: "text",
-                      color: "transparent",
-                    }}
-                  >
-                    Innovadora Tecnología Revoluciona la Industria de
-                    Comunicaciones
-                  </h2>
-                  <p
-                    className="featured-news-excerpt mb-4"
-                    style={{
-                      fontSize: "1.1rem",
-                      lineHeight: "1.7",
-                      color: "#495057",
-                      flexGrow: 1,
-                    }}
-                  >
-                    Un avance tecnológico sin precedentes está transformando la
-                    forma en que las empresas se comunican a nivel global. La
-                    nueva plataforma integra inteligencia artificial con
-                    sistemas de transmisión de última generación, permitiendo
-                    una comunicación más rápida, segura y eficiente. Expertos
-                    predicen que este desarrollo marcará un antes y un después
-                    en la industria.
-                  </p>
 
-                  <div className="featured-news-meta d-flex align-items-center gap-3 mb-4 flex-wrap">
-                    <div className="d-flex align-items-center gap-2">
-                      <BiCalendar
-                        className="text-primary"
-                        style={{ fontSize: "1.1rem" }}
-                      />
-                      <span>15 Junio 2025</span>
-                    </div>
-                    <div className="d-flex align-items-center gap-2">
-                      <BiUser
-                        className="text-primary"
-                        style={{ fontSize: "1.1rem" }}
-                      />
-                      <span>Redacción CMP - Piura</span>
-                    </div>
-                  </div>
+                  {loading ? (
+                    <h2>Cargando última noticia…</h2>
+                  ) : (
+                    <>
+                      <h2
+                        className="featured-news-title mb-3"
+                        style={{
+                          fontSize: "2.25rem",
+                          fontWeight: "800",
+                          lineHeight: "1.2",
+                          background:
+                            "linear-gradient(90deg,rgb(22, 23, 24) 0%,rgb(79, 18, 119) 100%)",
+                          WebkitBackgroundClip: "text",
+                          backgroundClip: "text",
+                          color: "transparent",
+                        }}
+                      >
+                        {news?.title}
+                      </h2>
+
+                      <p
+                        className="featured-news-excerpt mb-4"
+                        style={{
+                          fontSize: "1.1rem",
+                          lineHeight: "1.7",
+                          color: "#495057",
+                          flexGrow: 1,
+                        }}
+                      >
+                        {truncate(news?.description)}
+                      </p>
+
+                      <div className="featured-news-meta d-flex align-items-center gap-3 mb-4 flex-wrap">
+                        <div className="d-flex align-items-center gap-2">
+                          <BiCalendar
+                            className="text-primary"
+                            style={{ fontSize: "1.1rem" }}
+                          />
+                          <span>{formatDate(news?.created_at)}</span>
+                        </div>
+                        <div className="d-flex align-items-center gap-2">
+                          <BiUser
+                            className="text-primary"
+                            style={{ fontSize: "1.1rem" }}
+                          />
+                          <span>{news?.author || "Redacción CMP - Piura"}</span>
+                        </div>
+                      </div>
+                    </>
+                  )}
 
                   <Link
                     to="/news#noticias"
                     className="btn btn-primary mt-auto align-self-start d-inline-flex align-items-center gap-2"
                     style={{
-                      background:
-                        "linear-gradient(linear-gradient(90deg, #5c0655, #8a0b7d))",
+                      background: "linear-gradient(90deg, #5c0655, #8a0b7d)",
                       border: "none",
                       fontWeight: "600",
                       padding: "0.8rem 2rem",
@@ -817,6 +877,82 @@ const Home = () => {
             </div>
           </div>
         </section>
+        <div
+          style={{
+            position: "fixed",
+            bottom: "25px",
+            right: "25px",
+            zIndex: 1050,
+          }}
+        >
+          <button
+            className="btn btn-primary btn-lg rounded-circle shadow position-relative"
+            style={{
+              width: "60px",
+              height: "60px",
+              backgroundColor: "#800080",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+            onClick={openAvisos}
+            aria-label="Ver anuncios"
+          >
+            <i className="bi bi-megaphone-fill fs-4 text-white"></i>
+
+            {/* Badge contador - ahora posicionado correctamente */}
+            {totalAvisos > 0 && (
+              <span
+                className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                style={{
+                  fontSize: "0.75rem",
+                  padding: "0.4em 0.6em",
+                  transform: "translate(-50%, -50%)", // Ajuste fino
+                }}
+              >
+                {totalAvisos}
+              </span>
+            )}
+          </button>
+        </div>
+        <Modal show={showAvisos} onHide={closeAvisos} size="lg" centered>
+          <Modal.Header closeButton>
+            <Modal.Title>
+              <i className="bi bi-megaphone-fill me-2" /> Avisos
+            </Modal.Title>
+          </Modal.Header>
+
+          <Modal.Body className="p-0">
+            {avisos.length === 0 ? (
+              <div className="text-center py-5 bg-light">
+                <i
+                  className="bi bi-megaphone text-muted"
+                  style={{ fontSize: "4rem", opacity: 0.3 }}
+                />
+                <h4 className="mt-3 text-muted">
+                  No hay anuncios en este momento
+                </h4>
+                <p className="text-muted">
+                  Pronto publicaremos nuevos avisos importantes
+                </p>
+              </div>
+            ) : (
+              <>
+                <Carousel>
+                  {avisos.map((img, idx) => (
+                    <Carousel.Item key={idx}>
+                      <img
+                        src={img}
+                        className="d-block w-100"
+                        alt={`Aviso ${idx + 1}`}
+                      />
+                    </Carousel.Item>
+                  ))}
+                </Carousel>
+              </>
+            )}
+          </Modal.Body>
+        </Modal>
       </main>
       <Footer />
     </>

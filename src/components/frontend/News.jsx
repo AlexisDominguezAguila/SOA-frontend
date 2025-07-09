@@ -1,14 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import axios from "axios";
 import Header from "@/components/common/Header";
 import Footer from "@/components/common/Footer";
 import placeholder from "@/assets/images/NoticiaEjp.webp";
+import api from "@/services/api";
 
-/* ----------------------------------------------------------------------
- |  Helpers
- * ------------------------------------------------------------------- */
 const formatDate = (iso) =>
   new Date(iso).toLocaleDateString("es-ES", {
     day: "2-digit",
@@ -16,25 +13,47 @@ const formatDate = (iso) =>
     year: "numeric",
   });
 
-/* ----------------------------------------------------------------------
- |  COMPONENTE
- * ------------------------------------------------------------------- */
 const News = () => {
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  /* datos para el hero */
+  const [hero, setHero] = useState({
+    img: "/banner-news.jpg",
+    title: "Nuestras Últimas Noticias",
+  });
+
   useEffect(() => {
-    axios
-      .get("/public/news")
-      .then((res) => {
-        const payload = res.data;
-        setNews(Array.isArray(payload) ? payload : payload.data || []);
-      })
-      .catch((err) => {
+    const fetchNews = async () => {
+      try {
+        setLoading(true);
+        const res = await api.get("/public/news", {
+          params: { per_page: 100 },
+        });
+        const list = Array.isArray(res.data) ? res.data : res.data.data || [];
+
+        setNews(list);
+
+        if (list.length) {
+          const first = list[0];
+          setHero({
+            img: first.image_url
+              ? first.image_url.startsWith("http")
+                ? first.image_url
+                : `/storage/${first.image_url}`
+              : "/banner-news.jpg",
+            title: first.title,
+          });
+        }
+      } catch (err) {
         console.error(err);
         setNews([]);
-      })
-      .finally(() => setLoading(false));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNews();
   }, []);
 
   return (
@@ -45,7 +64,7 @@ const News = () => {
       <section
         className="hero-section d-flex align-items-center justify-content-center text-center text-white"
         style={{
-          backgroundImage: `url(/banner-news.jpg)`,
+          backgroundImage: `url(${hero.img})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
           minHeight: "80vh",
@@ -57,7 +76,8 @@ const News = () => {
           style={{ backgroundColor: "rgba(0,0,0,.4)", zIndex: 1 }}
         />
         <div className="container position-relative z-2">
-          <h1 className="display-4 fw-bold mb-3">Nuestras Últimas Noticias</h1>
+          <h1 className="display-4 fw-bold mb-3">{hero.title}</h1>
+
           <button
             className="btn btn-primary mt-3"
             onClick={() =>
