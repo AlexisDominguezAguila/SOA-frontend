@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Button,
   Card,
@@ -11,11 +11,17 @@ import {
   Pagination,
   Row,
   Table,
+  Spinner,
 } from "react-bootstrap";
 import DashboardSidebar from "@/components/common/Sidebar";
 import api from "@/services/api";
 import Swal from "sweetalert2";
 import "@/components/backend/layout/dashboard.scss";
+import Select from "react-select";
+
+/* ---------------------------------------------------------------------------
+ |  UTILS
+ * ------------------------------------------------------------------------ */
 
 const emptyDean = {
   id: null,
@@ -27,6 +33,56 @@ const emptyDean = {
   isActive: true,
 };
 
+const generateYears = (start = 1900, end = 2100) =>
+  Array.from({ length: end - start + 1 }, (_, i) => {
+    const y = start + i;
+    return { value: y, label: y.toString() };
+  });
+
+/* ---------------------------------------------------------------------------
+ |  YearSelect – selector con buscador basado en react‑select
+ * ------------------------------------------------------------------------ */
+
+const YearSelect = ({ name, value, onChange, minYear = 1900 }) => {
+  const options = useMemo(() => generateYears(minYear, 2100), [minYear]);
+
+  const selectedOption =
+    options.find((opt) => opt.value === parseInt(value)) || null;
+
+  return (
+    <Select
+      options={options}
+      value={selectedOption}
+      onChange={(selected) =>
+        onChange({
+          target: {
+            name,
+            value: selected ? selected.value : "",
+          },
+        })
+      }
+      placeholder="Selecciona un año"
+      isClearable
+      className="react-select-container"
+      classNamePrefix="react-select"
+      maxMenuHeight={180}
+      styles={{
+        menu: (provided) => ({ ...provided, zIndex: 1055 }),
+        control: (provided) => ({
+          ...provided,
+          borderRadius: "0.375rem",
+          minHeight: "38px",
+          fontSize: "0.95rem",
+        }),
+      }}
+    />
+  );
+};
+
+/* ---------------------------------------------------------------------------
+ |  MAIN COMPONENT
+ * ------------------------------------------------------------------------ */
+
 const PastDeans = () => {
   const [data, setData] = useState([]);
   const [query, setQuery] = useState("");
@@ -36,12 +92,33 @@ const PastDeans = () => {
   const [form, setForm] = useState(emptyDean);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
+  const [loading, setLoading] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+  const [saving, setSaving] = useState(false);
 
   const toggleSidebar = () => setIsSidebarOpen((p) => !p);
 
-  // Fetch deans
+  /* ------------------------- solapamiento de periodos --------------------- */
+  const checkPeriodOverlap = useCallback(
+    (newStart, newEnd, excludeId = null) => {
+      return data.some((dean) => {
+        if (excludeId && dean.id === excludeId) return false;
+
+        const start = parseInt(dean.year_start ?? dean.yearStart);
+        const end = parseInt(dean.year_end ?? dean.yearEnd);
+        const newS = parseInt(newStart);
+        const newE = parseInt(newEnd);
+
+        return newS <= end && newE >= start;
+      });
+    },
+    [data]
+  );
+
+  /* ------------------------------ fetch ---------------------------------- */
   const fetchDeans = async () => {
     try {
+      setLoading(true);
       const { data } = await api.get("/deans", { params: { per_page: 100 } });
       setData(data.data ?? data);
     } catch (e) {
@@ -52,6 +129,8 @@ const PastDeans = () => {
         icon: "error",
         confirmButtonColor: "#5C0655",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -59,33 +138,37 @@ const PastDeans = () => {
     fetchDeans();
   }, []);
 
-  // Save dean
+  /* ------------------------------ save ----------------------------------- */
   const handleSave = async () => {
-    if (!form.name.trim()) {
-      return Swal.fire({
-        title: "Nombre requerido",
-        icon: "warning",
-        confirmButtonColor: "#5C0655",
-      });
-    }
-    if (form.yearStart > form.yearEnd) {
-      return Swal.fire({
-        title: "Revisa los años",
-        text: "El año de inicio no puede ser mayor al año de fin",
-        icon: "warning",
-        confirmButtonColor: "#5C0655",
-      });
-    }
-
-    const fd = new FormData();
-    fd.append("name", form.name);
-    fd.append("year_start", form.yearStart);
-    fd.append("year_end", form.yearEnd);
-    fd.append("is_active", form.isActive ? 1 : 0);
-    if (form.file) fd.append("image", form.file);
-    if (!form.file && form.imageUrl) fd.append("image_url", form.imageUrl);
+    if (saving) return;
+    setSaving(true);
 
     try {
+      // validaciones
+      if (!form.name.trim()) throw new Error("El nombre completo es requerido");
+      if (!form.yearStart || !form.yearEnd)
+        throw new Error("Ambos años son requeridos");
+
+      const yearStart = parseInt(form.yearStart);
+      const yearEnd = parseInt(form.yearEnd);
+      if (isNaN(yearStart) || isNaN(yearEnd))
+        throw new Error("Los años deben ser números válidos");
+      if (yearStart > yearEnd)
+        throw new Error("El año de inicio no puede ser mayor al año de fin");
+      if (checkPeriodOverlap(yearStart, yearEnd, form.id))
+        throw new Error("El período se solapa con otro decano existente");
+
+      if (form.file && form.file.size > 2 * 1024 * 1024)
+        throw new Error("La imagen no puede superar los 2MB");
+
+      const fd = new FormData();
+      fd.append("name", form.name);
+      fd.append("year_start", form.yearStart);
+      fd.append("year_end", form.yearEnd);
+      fd.append("is_active", form.isActive ? 1 : 0);
+      if (form.file) fd.append("image", form.file);
+      if (!form.file && form.imageUrl) fd.append("image_url", form.imageUrl);
+
       if (form.id) {
         await api.post(`/deans/${form.id}?_method=PUT`, fd);
         Swal.fire({
@@ -105,19 +188,24 @@ const PastDeans = () => {
       }
       handleClose();
       fetchDeans();
-    } catch (e) {
-      console.error(e.response?.data);
+    } catch (error) {
+      console.error(error);
       Swal.fire({
-        title: "Error",
-        text: "No se pudo guardar el decano",
-        icon: "error",
+        title: "Error de validación",
+        text: error.message,
+        icon: "warning",
         confirmButtonColor: "#5C0655",
       });
+    } finally {
+      setSaving(false);
     }
   };
 
-  // Delete dean
+  /* ------------------------------ delete --------------------------------- */
   const handleDelete = (id) => {
+    if (deletingId) return;
+    setDeletingId(id);
+
     Swal.fire({
       title: "¿Estás seguro?",
       text: "Esta acción no se puede deshacer",
@@ -128,7 +216,10 @@ const PastDeans = () => {
       confirmButtonText: "Sí, eliminar",
       cancelButtonText: "Cancelar",
     }).then(async (res) => {
-      if (!res.isConfirmed) return;
+      if (!res.isConfirmed) {
+        setDeletingId(null);
+        return;
+      }
       try {
         await api.delete(`/deans/${id}`);
         Swal.fire({
@@ -146,11 +237,13 @@ const PastDeans = () => {
           icon: "error",
           confirmButtonColor: "#5C0655",
         });
+      } finally {
+        setDeletingId(null);
       }
     });
   };
 
-  // Modal handlers
+  /* ------------------------------ modal helpers -------------------------- */
   const handleOpen = () => setShowModal(true);
   const handleClose = () => {
     setForm(emptyDean);
@@ -158,13 +251,38 @@ const PastDeans = () => {
   };
 
   const handleEdit = (d) => {
-    setForm({ ...emptyDean, ...d, imageUrl: d.image_url ?? d.imageUrl });
+    setForm({
+      ...emptyDean,
+      ...d,
+      imageUrl: d.image_url ?? d.imageUrl,
+      yearStart: d.year_start ?? d.yearStart,
+      yearEnd: d.year_end ?? d.yearEnd,
+      isActive: d.is_active ?? d.isActive,
+    });
     setShowModal(true);
   };
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
     if (name === "file") {
+      if (files[0]) {
+        const validTypes = [
+          "image/jpeg",
+          "image/png",
+          "image/jpg",
+          "image/webp",
+        ];
+        if (!validTypes.includes(files[0].type)) {
+          Swal.fire({
+            title: "Formato inválido",
+            text: "Solo se permiten imágenes JPG, PNG o WEBP",
+            icon: "warning",
+            confirmButtonColor: "#5C0655",
+          });
+          return;
+        }
+      }
+
       setForm((f) => ({
         ...f,
         imageUrl: files[0] ? URL.createObjectURL(files[0]) : "",
@@ -175,7 +293,7 @@ const PastDeans = () => {
     }
   };
 
-  // Pagination logic
+  /* ------------------------------ filtros y paginación ------------------- */
   const filtered = data.filter((d) => {
     const matchesName = d.name.toLowerCase().includes(query.toLowerCase());
     const isActive = d.is_active ?? d.isActive;
@@ -191,19 +309,19 @@ const PastDeans = () => {
   const pages = Math.ceil(filtered.length / pageSize);
   const view = filtered.slice((page - 1) * pageSize, page * pageSize);
 
+  /* ------------------------------ render --------------------------------- */
   return (
     <div className="dashboard-container min-vh-100">
       <DashboardSidebar isOpen={isSidebarOpen} />
       <main className="main-content-container">
         <section className="content-section p-4">
           {/* Header Section */}
-
           <div className="page-header mb-5">
             <div className="header-content">
               <div className="header-info">
                 <h1 className="page-title">Gestión de Past de Decanos</h1>
                 <p className="page-subtitle">
-                  Gestiona la Información Historica de los Decanos de CMP
+                  Gestiona la Información Histórica de los Decanos de CMP
                 </p>
                 <div className="header-stats mt-3 d-flex flex-wrap gap-3">
                   <span className="stat-item ">
@@ -232,13 +350,13 @@ const PastDeans = () => {
               </div>
             </div>
           </div>
+
           {/* Search Filter */}
           <Card className="filter-card mb-4">
             <Card.Body className="p-4">
               <div className="filters-header mb-3">
                 <h5 className="filters-title">
-                  <i className="bi bi-funnel me-2"></i>
-                  Filtros de búsqueda
+                  <i className="bi bi-funnel me-2"></i>Filtros de búsqueda
                 </h5>
               </div>
               <Row className="g-3">
@@ -269,7 +387,7 @@ const PastDeans = () => {
                     }}
                     className="status-filter"
                   >
-                    <option value="all">Todos los estados</option>
+                    <option value="all"> Todos los estados</option>
                     <option value="active">Activos</option>
                     <option value="inactive">Inactivos</option>
                   </Form.Select>
@@ -306,8 +424,8 @@ const PastDeans = () => {
             <Card.Body className="p-0">
               <div className="table-header">
                 <h5 className="table-title mb-0 p-4 ">
-                  <i className="bi bi-list-ul me-2"></i>
-                  Lista Historica de Decanos
+                  <i className="bi bi-list-ul me-2"></i>Lista Histórica de
+                  Decanos
                 </h5>
               </div>
               <div className="table-responsive">
@@ -323,7 +441,14 @@ const PastDeans = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {view.length > 0 ? (
+                    {loading ? (
+                      <tr>
+                        <td colSpan="6" className="text-center py-5">
+                          <Spinner animation="border" variant="primary" />
+                          <p className="mt-2">Cargando decanos...</p>
+                        </td>
+                      </tr>
+                    ) : view.length > 0 ? (
                       view.map((d, i) => (
                         <tr key={d.id} className="table-row">
                           <td className="table-cell">
@@ -370,6 +495,7 @@ const PastDeans = () => {
                               <Button
                                 size="sm"
                                 className="btn-action btn-edit"
+                                variant="outline-secondary"
                                 onClick={() => handleEdit(d)}
                                 title="Editar decano"
                               >
@@ -378,10 +504,16 @@ const PastDeans = () => {
                               <Button
                                 size="sm"
                                 className="btn-action btn-delete"
+                                variant="outline-danger"
                                 onClick={() => handleDelete(d.id)}
                                 title="Eliminar decano"
+                                disabled={deletingId === d.id}
                               >
-                                <i className="bi bi-trash3" />
+                                {deletingId === d.id ? (
+                                  <span className="spinner-border spinner-border-sm" />
+                                ) : (
+                                  <i className="bi bi-trash3" />
+                                )}
                               </Button>
                             </div>
                           </td>
@@ -392,11 +524,15 @@ const PastDeans = () => {
                         <td colSpan="6" className=" text-center py-5">
                           <div className="empty-state">
                             <i className="bi bi-inbox"></i>
-                            <h5>No se encontraron decanos registrados</h5>
+                            <h5>
+                              {query
+                                ? "No se encontraron resultados para tu búsqueda"
+                                : "Aún no has registrado ningún decano"}
+                            </h5>
                             <p>
                               {query
-                                ? "Intenta con otros términos de búsqueda"
-                                : "Comienza agregando un nuevo decano"}
+                                ? "Prueba con otros términos o verifica la ortografía"
+                                : "Empieza agregando el primer decano al sistema"}
                             </p>
                           </div>
                         </td>
@@ -496,6 +632,7 @@ const PastDeans = () => {
                   </InputGroup>
                   <Form.Text className="text-muted">
                     Puedes usar una URL o subir un archivo desde tu dispositivo
+                    (max 2MB)
                   </Form.Text>
                 </Form.Group>
               </Col>
@@ -506,7 +643,7 @@ const PastDeans = () => {
                 <Form.Group>
                   <Form.Label className="form-label-custom">
                     <i className="bi bi-person me-2" />
-                    Nombre Completo
+                    Nombre Completo *
                   </Form.Label>
                   <Form.Control
                     name="name"
@@ -514,6 +651,7 @@ const PastDeans = () => {
                     value={form.name}
                     onChange={handleChange}
                     className="form-input-custom"
+                    required
                   />
                 </Form.Group>
               </Col>
@@ -524,17 +662,12 @@ const PastDeans = () => {
                 <Form.Group>
                   <Form.Label className="form-label-custom">
                     <i className="bi bi-calendar-event me-2" />
-                    Año de Inicio
+                    Año de Inicio *
                   </Form.Label>
-                  <Form.Control
+                  <YearSelect
                     name="yearStart"
-                    type="number"
-                    min="1900"
-                    max="2100"
-                    placeholder="2020"
                     value={form.yearStart}
                     onChange={handleChange}
-                    className="form-input-custom"
                   />
                 </Form.Group>
               </Col>
@@ -542,17 +675,13 @@ const PastDeans = () => {
                 <Form.Group>
                   <Form.Label className="form-label-custom">
                     <i className="bi bi-calendar-check me-2" />
-                    Año de Fin
+                    Año de Fin *
                   </Form.Label>
-                  <Form.Control
+                  <YearSelect
                     name="yearEnd"
-                    type="number"
-                    min={form.yearStart || 1900}
-                    max="2100"
-                    placeholder="2024"
                     value={form.yearEnd}
                     onChange={handleChange}
-                    className="form-input-custom"
+                    minYear={form.yearStart}
                   />
                 </Form.Group>
               </Col>
@@ -572,15 +701,34 @@ const PastDeans = () => {
           </Form>
         </Modal.Body>
         <Modal.Footer className="modal-footer-custom">
-          <Button className="btn-secondary-custom" onClick={handleClose}>
+          <Button
+            className="btn-secondary-custom"
+            onClick={handleClose}
+            disabled={saving}
+          >
             <i className="bi bi-x-lg me-2" />
             Cancelar
           </Button>
-          <Button className="btn-primary-custom" onClick={handleSave}>
-            <i
-              className={`bi ${form.id ? "bi-check-lg" : "bi-plus-lg"} me-2`}
-            />
-            {form.id ? "Actualizar" : "Guardar"}
+          <Button
+            className="btn-primary-custom"
+            onClick={handleSave}
+            disabled={saving}
+          >
+            {saving ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" />
+                {form.id ? "Actualizando..." : "Guardando..."}
+              </>
+            ) : (
+              <>
+                <i
+                  className={`bi ${
+                    form.id ? "bi-check-lg" : "bi-plus-lg"
+                  } me-2`}
+                />
+                {form.id ? "Actualizar" : "Guardar"}
+              </>
+            )}
           </Button>
         </Modal.Footer>
       </Modal>

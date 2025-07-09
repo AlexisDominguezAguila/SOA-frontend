@@ -18,7 +18,7 @@ const Dashboard = () => {
     >
       <DashboardSidebar isOpen={isSidebarOpen} />
 
-      <main className="main-content-container flex-grow-1 p-4">
+      {/* <main className="main-content-container flex-grow-1 p-4">
         <DashboardHeader toggleSidebar={() => {}} />
 
         <div className="d-flex justify-content-between align-items-center mb-4">
@@ -114,7 +114,7 @@ const Dashboard = () => {
             </Card>
           </div>
         </div>
-      </main>
+      </main> */}
     </div>
   );
 };

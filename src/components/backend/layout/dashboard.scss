@@ -209,7 +209,7 @@
 /*estilos generales de las tablas*/
 
 .table-card {
-  border: none;
+  border: none !important;
   background-color: #1e293b;
   border-radius: 10px;
   overflow: hidden;
@@ -484,18 +484,22 @@
   padding: 3rem 2rem;
   text-align: center;
 }
+.empty-state {
+  background-color: #0f111a !important;
+  border: none !important;
+}
 
 .empty-state i {
   opacity: 0.6;
   font-size: 3rem;
   margin-bottom: 1rem;
-  color: #94a3b8;
+  color: #b4bfce;
 }
 
 .empty-state h5 {
   font-weight: 500;
   margin-bottom: 0.5rem;
-  color: #64748b;
+  color: #a0aab9;
 }
 
 .empty-state p {
@@ -503,6 +507,7 @@
   color: #94a3b8;
   max-width: 400px;
   margin: 0 auto;
+  font-style: italic;
 }
 
 /* Responsividad tabla */
@@ -575,4 +580,20 @@
   .main-content-container {
     margin-left: 0 !important;
   }
+}
+.image-preview-container {
+  height: 300px; /* Altura fija que define el tamaño de referencia */
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.image-preview {
+  height: 100%;
+  width: auto;
+  object-fit: contain;
 }

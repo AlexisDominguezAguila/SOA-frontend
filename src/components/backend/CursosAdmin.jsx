@@ -15,30 +15,7 @@ import {
 import DashboardSidebar from "@/components/common/Sidebar";
 import "@/components/backend/layout/dashboard.scss";
 
-import defaultImg from "@/assets/images/convenio.jpeg";
-
-const DUMMY_DATA = [
-  {
-    id: 1,
-    img: defaultImg,
-    title: "Curso de Introducción a React",
-    description: "Aprende los fundamentos de React en este curso intensivo.",
-    speaker: "Ing. Juan Pérez",
-    url: "https://curso-react.com",
-    status: "active",
-    created_at: "2024-06-10",
-  },
-  {
-    id: 2,
-    img: defaultImg,
-    title: "Taller de Ciberseguridad",
-    description: "Protege tu información personal y empresarial.",
-    speaker: "Dra. María Torres",
-    url: "https://ciberseguridad.org",
-    status: "inactive",
-    created_at: "2024-05-20",
-  },
-];
+const DUMMY_DATA = [];
 
 const CursosAdmin = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -94,12 +71,12 @@ const CursosAdmin = () => {
                 <div className="header-stats">
                   <span className="stat-item">
                     <i className="bi bi-file-text"></i>
-                    {data.length} Noticias totales
+                    {data.length} Cursos totales
                   </span>
                   <span className="stat-item">
                     <i className="bi bi-check-circle"></i>
                     {data.filter((n) => n.status === "active").length}{" "}
-                    Publicadas
+                    Publicados
                   </span>
                   <span className="stat-item ">
                     <i className="bi bi-x-circle me-1"></i>
@@ -111,7 +88,7 @@ const CursosAdmin = () => {
               <div className="header-actions">
                 <Button className="btn-primary-custom" onClick={handleShow}>
                   <i className="bi bi-plus-lg me-2"></i>
-                  Nueva Noticia
+                  Nuevo Curso
                 </Button>
               </div>
             </div>
@@ -190,90 +167,137 @@ const CursosAdmin = () => {
               </Row>
             </Card.Body>
           </Card>
+
           {/* Tabla */}
-          <Table responsive hover className="table-borderless">
-            <thead className="table-light">
-              <tr>
-                <th>#</th>
-                <th>Imagen</th>
-                <th>Título</th>
-                <th>Descripción</th>
-                <th>Ponente</th>
-                <th>Estado</th>
-                <th>Enlace</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {view.map((curso, i) => (
-                <tr key={curso.id}>
-                  <td>{(page - 1) * pageSize + i + 1}</td>
-                  <td>
-                    <img
-                      src={curso.img}
-                      alt={curso.title}
-                      width="50"
-                      className="rounded shadow-sm"
-                    />
-                  </td>
-                  <td>{curso.title}</td>
-                  <td>
-                    <small>{curso.description}</small>
-                  </td>
-                  <td>
-                    <small>{curso.speaker}</small>
-                  </td>
-                  <td>{getStatusBadge(curso.status)}</td>
-                  <td>
-                    <a
-                      href={curso.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-decoration-none"
-                    >
-                      <i className="bi bi-box-arrow-up-right me-1"></i>
-                      Ver
-                    </a>
-                  </td>
-                  <td>
-                    <Button
-                      size="sm"
-                      variant="outline-primary"
-                      className="me-2"
-                      onClick={() => handleEdit(curso)}
-                    >
-                      <i className="bi bi-pencil"></i>
-                    </Button>
-                    <Button size="sm" variant="outline-danger">
-                      <i className="bi bi-trash"></i>
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
+          <Card className="table-card">
+            <Card.Body className="p-0">
+              <div className="table-header">
+                <h5 className="table-title mb-0 p-4 ">
+                  <i className="bi bi-list-ul me-2"></i>Lista de Cursos
+                </h5>
+              </div>
+              <div className="table-responsive">
+                <Table>
+                  <thead className="table-light">
+                    <tr>
+                      <th>#</th>
+                      <th>Imagen</th>
+                      <th>Título</th>
+                      <th>Descripción</th>
+                      <th>Ponente</th>
+                      <th>Estado</th>
+                      <th>Enlace</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {view.length > 0 ? (
+                      view.map((curso, i) => (
+                        <tr key={curso.id}>
+                          <td>{(page - 1) * pageSize + i + 1}</td>
+
+                          <td>
+                            <img
+                              src={curso.img || "/placeholder.svg"}
+                              alt={curso.title}
+                              width="50"
+                              className="rounded shadow-sm"
+                            />
+                          </td>
+
+                          <td>{curso.title}</td>
+
+                          <td>
+                            <small>{curso.description}</small>
+                          </td>
+
+                          <td>
+                            <small>{curso.speaker}</small>
+                          </td>
+
+                          <td>{getStatusBadge(curso.status)}</td>
+
+                          <td>
+                            <a
+                              href={curso.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-decoration-none"
+                            >
+                              <i className="bi bi-box-arrow-up-right me-1"></i>
+                              Ver
+                            </a>
+                          </td>
+
+                          <td>
+                            <Button
+                              size="sm"
+                              variant="outline-primary"
+                              className="me-2"
+                              onClick={() => handleEdit(curso)}
+                            >
+                              <i className="bi bi-pencil"></i>
+                            </Button>
+
+                            <Button size="sm" variant="outline-danger">
+                              <i className="bi bi-trash"></i>
+                            </Button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        {/* colspan = número total de columnas */}
+                        <td colSpan="8" className="text-center py-5">
+                          <div className="empty-state">
+                            <i className="bi bi-inbox fs-1 mb-3 d-block text-muted"></i>
+                            <h5 className="mb-1">No se encontraron cursos</h5>
+                            <p className="text-muted mb-0">
+                              {query
+                                ? "Intenta con otros términos de búsqueda"
+                                : "Comienza agregando un nuevo curso"}
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </Table>
+              </div>
+            </Card.Body>
+          </Card>
 
           {/* Paginación */}
           {pages > 1 && (
-            <Pagination className="justify-content-end">
-              <Pagination.Prev
-                disabled={page === 1}
-                onClick={() => setPage(page - 1)}
-              />
-              {[...Array(pages)].map((_, i) => (
-                <Pagination.Item
-                  key={i}
-                  active={page === i + 1}
-                  onClick={() => setPage(i + 1)}
+            <div className="pagination-outer-container mt-4">
+              <Pagination className="custom-pagination">
+                <Pagination.Prev
+                  disabled={page === 1}
+                  onClick={() => setPage(page - 1)}
+                  className="pagination-control"
                 >
-                  {i + 1}
-                </Pagination.Item>
-              ))}
-              <Pagination.Next
-                disabled={page === pages}
-                onClick={() => setPage(page + 1)}
-              />
-            </Pagination>
+                  <i className="bi bi-chevron-left"></i>
+                </Pagination.Prev>
+                {[...Array(pages)].map((_, i) => (
+                  <Pagination.Item
+                    key={i}
+                    active={page === i + 1}
+                    onClick={() => setPage(i + 1)}
+                    className="pagination-item"
+                  >
+                    {i + 1}
+                  </Pagination.Item>
+                ))}
+                <Pagination.Next
+                  disabled={page === pages}
+                  onClick={() => setPage(page + 1)}
+                  className="pagination-control"
+                >
+                  <i className="bi bi-chevron-right"></i>
+                </Pagination.Next>
+              </Pagination>
+            </div>
           )}
         </section>
       </main>

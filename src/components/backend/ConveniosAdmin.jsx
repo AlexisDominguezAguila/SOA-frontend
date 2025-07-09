@@ -15,7 +15,7 @@ import {
   Row,
   Col,
 } from "react-bootstrap";
-import DashboardHeader from "@/components/common/HeaderAdmin";
+
 import DashboardSidebar from "@/components/common/Sidebar";
 import "@/components/backend/layout/dashboard.scss";
 import "@/components/backend/layout/ConveniosAdmin.scss";
@@ -123,104 +123,73 @@ const ConveniosAdmin = () => {
       <DashboardSidebar isOpen={isSidebarOpen} />
 
       {/* Contenedor principal */}
-      <div className="main-content-container">
-        {/* Header */}
-        <DashboardHeader toggleSidebar={toggleSidebar} />
-
+      <main className="main-content-container">
         {/* Contenido */}
         <section className="content-section p-4">
           {/* Header de la sección */}
-          <div className="section-header mb-4">
-            <div className="d-flex justify-content-between align-items-center">
-              <div>
-                <h2 className="section-title mb-1">
-                  <i className="bi bi-handshake me-2"></i>
-                  Gestión de Convenios
-                </h2>
-                <p className="section-subtitle mb-0">
-                  Administra los convenios y alianzas estratégicas
+          <div className="page-header mb-5">
+            <div className="header-content">
+              <div className="header-info">
+                <h1 className="page-title">Gestión de Convenios</h1>
+                <p className="page-subtitle">
+                  Administra y publica los convenios y alianzas institucionales
+                  de manera eficiente
                 </p>
+                <div className="header-stats">
+                  <span className="stat-item">
+                    <i className="bi bi-file-text"></i>
+                    {data.length} Convenios totales
+                  </span>
+                  <span className="stat-item">
+                    <i className="bi bi-check-circle"></i>
+                    {data.filter((n) => n.status === "active").length}{" "}
+                    Publicados
+                  </span>
+                  <span className="stat-item ">
+                    <i className="bi bi-x-circle me-1"></i>
+                    {data.filter((n) => n.status === "inactive").length} Sin
+                    revisar
+                  </span>
+                </div>
               </div>
-              <Button
-                className="btn-add-convenio"
-                onClick={handleShow}
-                size="lg"
-              >
-                <i className="bi bi-plus-lg me-2"></i>
-                Nuevo Convenio
-              </Button>
+              <div className="header-actions">
+                <Button className="btn-primary-custom" onClick={handleShow}>
+                  <i className="bi bi-plus-lg me-2"></i>
+                  Nuevo Convenio
+                </Button>
+              </div>
             </div>
           </div>
 
-          {/* Estadísticas rápidas */}
-          <Row className="mb-4">
-            <Col md={3}>
-              <Card className="stats-card stats-card-primary">
-                <Card.Body className="text-center">
-                  <i className="bi bi-briefcase-fill stats-icon"></i>
-                  <h3 className="stats-number">{data.length}</h3>
-                  <p className="stats-label">Total Convenios</p>
-                </Card.Body>
-              </Card>
-            </Col>
-            <Col md={3}>
-              <Card className="stats-card stats-card-success">
-                <Card.Body className="text-center">
-                  <i className="bi bi-check-circle stats-icon"></i>
-                  <h3 className="stats-number">
-                    {data.filter((c) => c.status === "active").length}
-                  </h3>
-                  <p className="stats-label">Activos</p>
-                </Card.Body>
-              </Card>
-            </Col>
-            <Col md={3}>
-              <Card className="stats-card stats-card-warning">
-                <Card.Body className="text-center">
-                  <i className="bi bi-pause-circle stats-icon"></i>
-                  <h3 className="stats-number">
-                    {data.filter((c) => c.status === "inactive").length}
-                  </h3>
-                  <p className="stats-label">Inactivos</p>
-                </Card.Body>
-              </Card>
-            </Col>
-            <Col md={3}>
-              <Card className="stats-card stats-card-info">
-                <Card.Body className="text-center">
-                  <i className="bi bi-calendar-plus stats-icon"></i>
-                  <h3 className="stats-number">2</h3>
-                  <p className="stats-label">Este Mes</p>
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
-
           {/* Filtros y búsqueda */}
-          <Card className="filters-card mb-4">
-            <Card.Body>
-              <Row className="align-items-end">
-                <Col md={6}>
-                  <Form.Label className="filter-label">
-                    Buscar convenio
-                  </Form.Label>
-                  <InputGroup className="search-input-group">
-                    <InputGroup.Text className="search-icon">
-                      <i className="bi bi-search"></i>
-                    </InputGroup.Text>
-                    <Form.Control
-                      placeholder="Buscar por título..."
-                      value={query}
-                      onChange={(e) => {
-                        setQuery(e.target.value);
-                        setPage(1);
-                      }}
-                      className="search-input"
-                    />
-                  </InputGroup>
+          <Card className="filter-card mb-4">
+            <Card.Body className="p-4">
+              <div className="filters-header mb-3">
+                <h5 className="filters-title">
+                  <i className="bi bi-funnel me-2"></i>
+                  Filtros de búsqueda
+                </h5>
+              </div>
+              <Row className="g-3">
+                <Col lg={5} md={6}>
+                  <div className="search-input-wrapper">
+                    <InputGroup className="search-input">
+                      <InputGroup.Text className="search-icon">
+                        <i className="bi bi-search"></i>
+                      </InputGroup.Text>
+                      <Form.Control
+                        placeholder="Buscar por título de convenio..."
+                        value={query}
+                        onChange={(e) => {
+                          setQuery(e.target.value);
+                          setPage(1);
+                        }}
+                        className="search-field"
+                      />
+                    </InputGroup>
+                  </div>
                 </Col>
-                <Col md={4}>
-                  <Form.Label className="filter-label">Estado</Form.Label>
+                <Col lg={3} md={4}>
                   <Form.Select
                     value={statusFilter}
                     onChange={(e) => {
@@ -229,15 +198,20 @@ const ConveniosAdmin = () => {
                     }}
                     className="status-filter"
                   >
-                    <option value="all">Todos los estados</option>
-                    <option value="active">Activos</option>
-                    <option value="inactive">Inactivos</option>
+                    <option value="all">
+                      <i className="bi bi-newspaper me-3"></i> Todos los estados
+                    </option>
+                    <option value="active">
+                      <i className="bi bi-newspaper me-3"></i> Activos
+                    </option>
+                    <option value="inactive">
+                      <i className="bi bi-newspaper me-3"></i> Inactivos
+                    </option>
                   </Form.Select>
                 </Col>
-                <Col md={2}>
+                <Col lg={2} md={2}>
                   <Button
-                    variant="outline-secondary"
-                    className="w-100 reset-btn"
+                    className="btn-clear-filters"
                     onClick={() => {
                       setQuery("");
                       setStatusFilter("all");
@@ -248,6 +222,15 @@ const ConveniosAdmin = () => {
                     Limpiar
                   </Button>
                 </Col>
+                <Col lg={2} md={12}>
+                  <div className="results-info">
+                    <span className="stat-item ">
+                      <i className="bi bi-list-check me-1"></i>
+                      {filtered.length} resultado
+                      {filtered.length !== 1 ? "s" : ""}
+                    </span>
+                  </div>
+                </Col>
               </Row>
             </Card.Body>
           </Card>
@@ -255,26 +238,34 @@ const ConveniosAdmin = () => {
           {/* Tabla de convenios */}
           <Card className="table-card">
             <Card.Body className="p-0">
-              {view.length > 0 ? (
-                <div className="table-responsive">
-                  <Table className="convenios-table mb-0">
-                    <thead>
-                      <tr>
-                        <th className="table-header">#</th>
-                        <th className="table-header">Logo</th>
-                        <th className="table-header">Información</th>
-                        <th className="table-header">Beneficios</th>
-                        <th className="table-header">Estado</th>
-                        <th className="table-header">Enlace</th>
-                        <th className="table-header text-end">Acciones</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {view.map((c, i) => (
+              <div className="table-header">
+                <h5 className="table-title mb-0 p-4">
+                  <i className="bi bi-list-ul me-2"></i>Lista de Convenios
+                </h5>
+              </div>
+
+              <div className="table-responsive">
+                <Table bsPrefix="modern-table" className="modern-table mb-0">
+                  <thead>
+                    <tr>
+                      <th className="table-header">#</th>
+                      <th className="table-header">Logo</th>
+                      <th className="table-header">Información</th>
+                      <th className="table-header">Beneficios</th>
+                      <th className="table-header">Estado</th>
+                      <th className="table-header">Enlace</th>
+                      <th className="table-header text-end">Acciones</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {view.length > 0 ? (
+                      view.map((c, i) => (
                         <tr key={c.id} className="table-row">
                           <td className="row-number">
                             {(page - 1) * pageSize + (i + 1)}
                           </td>
+
                           <td className="logo-cell">
                             <div className="logo-container">
                               <img
@@ -288,6 +279,7 @@ const ConveniosAdmin = () => {
                               />
                             </div>
                           </td>
+
                           <td className="info-cell">
                             <div>
                               <h6 className="convenio-title mb-1">{c.title}</h6>
@@ -298,6 +290,7 @@ const ConveniosAdmin = () => {
                               </small>
                             </div>
                           </td>
+
                           <td className="benefits-cell">
                             <div className="benefits-container">
                               <Badge bg="info" className="benefits-count">
@@ -321,9 +314,11 @@ const ConveniosAdmin = () => {
                               </div>
                             </div>
                           </td>
+
                           <td className="status-cell">
                             {getStatusBadge(c.status)}
                           </td>
+
                           <td className="link-cell">
                             <a
                               href={c.url}
@@ -335,6 +330,7 @@ const ConveniosAdmin = () => {
                               Visitar
                             </a>
                           </td>
+
                           <td className="actions-cell text-end">
                             <div className="action-buttons">
                               <Button
@@ -357,35 +353,27 @@ const ConveniosAdmin = () => {
                             </div>
                           </td>
                         </tr>
-                      ))}
-                    </tbody>
-                  </Table>
-                </div>
-              ) : (
-                <div className="empty-state">
-                  <div className="empty-state-content">
-                    <i className="bi bi-search empty-state-icon"></i>
-                    <h5 className="empty-state-title">
-                      No se encontraron convenios
-                    </h5>
-                    <p className="empty-state-text">
-                      {query || statusFilter !== "all"
-                        ? "Intenta ajustar los filtros de búsqueda"
-                        : "Comienza agregando tu primer convenio"}
-                    </p>
-                    {!query && statusFilter === "all" && (
-                      <Button
-                        variant="primary"
-                        onClick={handleShow}
-                        className="mt-2"
-                      >
-                        <i className="bi bi-plus-lg me-2"></i>
-                        Agregar Convenio
-                      </Button>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="7" className="text-center py-5">
+                          <div className="empty-state">
+                            <i className="bi bi-inbox fs-1 mb-3 d-block text-muted"></i>
+                            <h5 className="mb-1">
+                              No se encontraron convenios
+                            </h5>
+                            <p className="text-muted mb-0">
+                              {query
+                                ? "Intenta con otros términos de búsqueda"
+                                : "Comienza agregando un nuevo convenio"}
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
                     )}
-                  </div>
-                </div>
-              )}
+                  </tbody>
+                </Table>
+              </div>
             </Card.Body>
           </Card>
 
@@ -423,7 +411,7 @@ const ConveniosAdmin = () => {
             </div>
           )}
         </section>
-      </div>
+      </main>
 
       {/* Modal formulario */}
       <Modal
