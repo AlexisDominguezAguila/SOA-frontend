@@ -1,41 +1,145 @@
-import { useState } from "react";
+"use client";
+
 import {
-  Table,
   Button,
-  Modal,
+  Card,
+  Col,
   Form,
   InputGroup,
+  Modal,
   Pagination,
-  Badge,
-  Card,
   Row,
-  Col,
+  Table,
+  Spinner,
 } from "react-bootstrap";
-
 import DashboardSidebar from "@/components/common/Sidebar";
+import api from "@/services/api";
+import Swal from "sweetalert2";
 import "@/components/backend/layout/dashboard.scss";
 
-const DUMMY_DATA = [];
+import { useState, useEffect } from "react";
+import { Badge } from "react-bootstrap";
 
 const CursosAdmin = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
 
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
+  const [page, setPage] = useState(1);
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  const [formData, setFormData] = useState({
+    titulo: "",
+    descripcion: "",
+    ponente: "",
+    url: "",
+    activo: "active",
+    imagen: null,
+  });
+
   const handleClose = () => {
+    document.activeElement?.blur();
     setShowModal(false);
     setEditingItem(null);
   };
-  const handleShow = () => setShowModal(true);
+
+  const handleShow = () => {
+    setShowModal(true);
+  };
+
   const handleEdit = (item) => {
     setEditingItem(item);
     setShowModal(true);
   };
 
-  const [data] = useState(DUMMY_DATA);
-  const [query, setQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  useEffect(() => {
+    if (editingItem) {
+      setFormData({
+        titulo: editingItem.title || "",
+        descripcion: editingItem.description || "",
+        ponente: editingItem.speaker || "",
+        url: editingItem.url || "",
+        activo: editingItem.status || "active",
+        imagen: null,
+      });
+    } else {
+      setFormData({
+        titulo: "",
+        descripcion: "",
+        ponente: "",
+        url: "",
+        activo: "active",
+        imagen: null,
+      });
+    }
+  }, [editingItem]);
+
+  const handleSubmit = async () => {
+    const payload = new FormData();
+    payload.append("titulo", formData.titulo);
+    payload.append("descripcion", formData.descripcion);
+    payload.append("ponente", formData.ponente);
+    payload.append("url", formData.url);
+    payload.append("activo", formData.activo);
+
+    if (formData.imagen instanceof File) {
+      payload.append("imagen", formData.imagen);
+    }
+
+    try {
+      if (editingItem) {
+        await api.post(`/cursos/${editingItem.id}`, payload, {
+          headers: { "Content-Type": "multipart/form-data" },
+          params: { _method: "PUT" },
+        });
+        Swal.fire("Actualizado", "Curso actualizado correctamente.", "success");
+      } else {
+        await api.post("/cursos", payload, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        Swal.fire("Creado", "Curso creado correctamente.", "success");
+      }
+
+      handleClose();
+      fetchCursos();
+    } catch (error) {
+      console.error("Error detallado:", error.response?.data);
+      Swal.fire(
+        "Error",
+        "No se pudo guardar el curso: " +
+          (error.response?.data?.message || "Error desconocido"),
+        "error"
+      );
+    }
+  };
+
+  const handleDelete = async (id) => {
+    const confirm = await Swal.fire({
+      title: "¿Estás seguro?",
+      text: "Esta acción no se puede deshacer.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí, eliminar",
+    });
+
+    if (confirm.isConfirmed) {
+      try {
+        setDeletingId(id);
+        await api.delete(`/cursos/${id}`);
+        fetchCursos();
+        Swal.fire("Eliminado", "El curso ha sido eliminado.", "success");
+      } catch (error) {
+        Swal.fire("Error", "No se pudo eliminar el curso.", "error");
+      } finally {
+        setDeletingId(null);
+      }
+    }
+  };
 
   const filtered = data.filter((c) => {
     const matchesQuery = c.title.toLowerCase().includes(query.toLowerCase());
@@ -43,8 +147,25 @@ const CursosAdmin = () => {
     return matchesQuery && matchesStatus;
   });
 
+  const fetchCursos = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get("/cursos");
+
+      // Usa directamente res.data.data
+      setData(res.data.data);
+    } catch (err) {
+      console.error("Error al cargar cursos", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCursos();
+  }, []);
+
   const pageSize = 5;
-  const [page, setPage] = useState(1);
   const pages = Math.ceil(filtered.length / pageSize);
   const view = filtered.slice((page - 1) * pageSize, page * pageSize);
 
@@ -57,6 +178,7 @@ const CursosAdmin = () => {
   return (
     <div className="dashboard-container min-vh-100">
       <DashboardSidebar isOpen={isSidebarOpen} />
+
       <main className="main-content-container">
         <section className="content-section p-4">
           {/* Header mejorado */}
@@ -131,15 +253,9 @@ const CursosAdmin = () => {
                     }}
                     className="status-filter"
                   >
-                    <option value="all">
-                      <i className="bi bi-newspaper me-3"></i> Todos los estados
-                    </option>
-                    <option value="active">
-                      <i className="bi bi-newspaper me-3"></i> Aprobadas
-                    </option>
-                    <option value="inactive">
-                      <i className="bi bi-newspaper me-3"></i> Pendientes
-                    </option>
+                    <option value="all">Todos los estados</option>
+                    <option value="active">Aprobadas</option>
+                    <option value="inactive">Pendientes</option>
                   </Form.Select>
                 </Col>
                 <Col lg={2} md={2}>
@@ -177,86 +293,122 @@ const CursosAdmin = () => {
                 </h5>
               </div>
               <div className="table-responsive">
-                <Table>
-                  <thead className="table-light">
+                <Table bsPrefix="modern-table" className="modern-table mb-0">
+                  <thead>
                     <tr>
-                      <th>#</th>
-                      <th>Imagen</th>
-                      <th>Título</th>
-                      <th>Descripción</th>
-                      <th>Ponente</th>
-                      <th>Estado</th>
-                      <th>Enlace</th>
-                      <th>Acciones</th>
+                      <th className="table-header-cell">#</th>
+                      <th className="table-header-cell">Vista previa</th>
+                      <th className="table-header-cell">Información</th>
+                      <th className="table-header-cell">Enlace</th>
+                      <th className="table-header-cell">Estado</th>
+                      <th className="text-center">Acciones</th>
                     </tr>
                   </thead>
 
                   <tbody>
-                    {view.length > 0 ? (
+                    {loading ? (
+                      <tr>
+                        <td colSpan="6" className="text-center py-5">
+                          <Spinner animation="border" variant="primary" />
+                          <p className="mt-2">Cargando cursos...</p>
+                        </td>
+                      </tr>
+                    ) : view.length > 0 ? (
                       view.map((curso, i) => (
-                        <tr key={curso.id}>
-                          <td>{(page - 1) * pageSize + i + 1}</td>
-
-                          <td>
-                            <img
-                              src={curso.img || "/placeholder.svg"}
-                              alt={curso.title}
-                              width="50"
-                              className="rounded shadow-sm"
-                            />
+                        <tr key={curso.id} className="table-row">
+                          <td className="table-cell">
+                            <span className="row-number">
+                              {(page - 1) * pageSize + i + 1}
+                            </span>
                           </td>
 
-                          <td>{curso.title}</td>
-
-                          <td>
-                            <small>{curso.description}</small>
+                          <td className="table-cell">
+                            <div className="image-container">
+                              <img
+                                src={
+                                  curso.image_url || "/placeholder-avatar.png"
+                                }
+                                alt={curso.title}
+                                className="table-image"
+                                onError={(e) => {
+                                  e.target.src = "/placeholder-avatar.png";
+                                }}
+                              />
+                            </div>
                           </td>
 
-                          <td>
-                            <small>{curso.speaker}</small>
+                          <td className="table-cell">
+                            <div>
+                              <h6 className="table-title">{curso.title}</h6>
+                              <span className="date-info">
+                                <i className="bi bi-calendar3 me-1"></i>
+                                {curso.speaker}
+                              </span>
+                            </div>
                           </td>
 
-                          <td>{getStatusBadge(curso.status)}</td>
-
-                          <td>
-                            <a
-                              href={curso.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-decoration-none"
-                            >
-                              <i className="bi bi-box-arrow-up-right me-1"></i>
-                              Ver
-                            </a>
+                          <td className="table-cell">
+                            <div className="tag-list">
+                              <Button
+                                size="sm"
+                                className="btn-action btn-view"
+                                variant="outline-primary"
+                                onClick={() => window.open(curso.url, "_blank")}
+                                title="Ver noticia"
+                              >
+                                <i className="bi bi-box-arrow-up-right"></i>
+                              </Button>
+                            </div>
                           </td>
 
-                          <td>
-                            <Button
-                              size="sm"
-                              variant="outline-primary"
-                              className="me-2"
-                              onClick={() => handleEdit(curso)}
-                            >
-                              <i className="bi bi-pencil"></i>
-                            </Button>
+                          <td className="table-cell text-center">
+                            {getStatusBadge(curso.status)}
+                          </td>
 
-                            <Button size="sm" variant="outline-danger">
-                              <i className="bi bi-trash"></i>
-                            </Button>
+                          <td className="table-cell text-center">
+                            <div className="action-buttons">
+                              <Button
+                                size="sm"
+                                className="btn-action btn-edit"
+                                variant="outline-secondary"
+                                onClick={() => handleEdit(curso)}
+                                title="Editar"
+                              >
+                                <i className="bi bi-pencil-square"></i>
+                              </Button>
+
+                              <Button
+                                size="sm"
+                                className="btn-action btn-delete"
+                                variant="outline-danger"
+                                disabled={deletingId === curso.id}
+                                onClick={() => handleDelete(curso.id)}
+                                title="Eliminar"
+                              >
+                                {deletingId === curso.id ? (
+                                  <Spinner animation="border" size="sm" />
+                                ) : (
+                                  <i className="bi bi-trash"></i>
+                                )}
+                              </Button>
+                            </div>
                           </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        {/* colspan = número total de columnas */}
-                        <td colSpan="8" className="text-center py-5">
+                        <td colSpan={6} className="text-center py-5">
                           <div className="empty-state">
-                            <i className="bi bi-inbox fs-1 mb-3 d-block text-muted"></i>
-                            <h5 className="mb-1">No se encontraron cursos</h5>
-                            <p className="text-muted mb-0">
+                            <i className="bi bi-inbox"></i>
+                            <h5>
                               {query
-                                ? "Intenta con otros términos de búsqueda"
-                                : "Comienza agregando un nuevo curso"}
+                                ? "No se encontraron resultados para tu búsqueda"
+                                : "Aún no has registrado ningún curso"}
+                            </h5>
+                            <p>
+                              {query
+                                ? "Prueba con otros términos o verifica la ortografía"
+                                : "Empieza registrando tu primer curso"}
                             </p>
                           </div>
                         </td>
@@ -310,19 +462,40 @@ const CursosAdmin = () => {
             {editingItem ? "Editar Curso" : "Nuevo Curso"}
           </Modal.Title>
         </Modal.Header>
+
         <Modal.Body>
           <Form>
             <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Imagen del curso</Form.Label>
-                  <Form.Control type="file" />
+                  <Form.Control
+                    type="file"
+                    accept="image/jpeg,image/png,image/jpg,image/webp,image"
+                    onChange={(e) =>
+                      setFormData({ ...formData, imagen: e.target.files[0] })
+                    }
+                  />
+                  {editingItem?.image_url && (
+                    <img
+                      src={editingItem.image_url}
+                      alt="Vista previa"
+                      className="img-thumbnail mt-2"
+                      width={150}
+                    />
+                  )}
                 </Form.Group>
               </Col>
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Título</Form.Label>
-                  <Form.Control defaultValue={editingItem?.title || ""} />
+                  <Form.Control
+                    value={formData.titulo}
+                    onChange={(e) =>
+                      setFormData({ ...formData, titulo: e.target.value })
+                    }
+                    placeholder="Título del curso"
+                  />
                 </Form.Group>
               </Col>
             </Row>
@@ -332,15 +505,22 @@ const CursosAdmin = () => {
               <Form.Control
                 as="textarea"
                 rows={3}
-                defaultValue={editingItem?.description || ""}
+                value={formData.descripcion}
+                onChange={(e) =>
+                  setFormData({ ...formData, descripcion: e.target.value })
+                }
+                placeholder="Descripción del curso"
               />
             </Form.Group>
 
             <Form.Group className="mb-3">
               <Form.Label>Ponente</Form.Label>
               <Form.Control
+                value={formData.ponente}
+                onChange={(e) =>
+                  setFormData({ ...formData, ponente: e.target.value })
+                }
                 placeholder="Nombre del ponente"
-                defaultValue={editingItem?.speaker || ""}
               />
             </Form.Group>
 
@@ -350,14 +530,23 @@ const CursosAdmin = () => {
                   <Form.Label>Enlace del curso</Form.Label>
                   <Form.Control
                     type="url"
-                    defaultValue={editingItem?.url || ""}
+                    value={formData.url}
+                    onChange={(e) =>
+                      setFormData({ ...formData, url: e.target.value })
+                    }
+                    placeholder="https://..."
                   />
                 </Form.Group>
               </Col>
               <Col md={4}>
                 <Form.Group className="mb-3">
                   <Form.Label>Estado</Form.Label>
-                  <Form.Select defaultValue={editingItem?.status || "active"}>
+                  <Form.Select
+                    value={formData.activo}
+                    onChange={(e) =>
+                      setFormData({ ...formData, activo: e.target.value })
+                    }
+                  >
                     <option value="active">Activo</option>
                     <option value="inactive">Inactivo</option>
                   </Form.Select>
@@ -366,11 +555,13 @@ const CursosAdmin = () => {
             </Row>
           </Form>
         </Modal.Body>
+
         <Modal.Footer>
-          <Button variant="secondary" onClick={handleClose}>
+          <Button className="btn-secondary-custom" onClick={handleClose}>
+            <i className="bi bi-x-lg me-2" />
             Cancelar
           </Button>
-          <Button variant="primary">
+          <Button variant="primary" onClick={handleSubmit}>
             {editingItem ? "Actualizar" : "Guardar"}
           </Button>
         </Modal.Footer>

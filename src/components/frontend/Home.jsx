@@ -16,7 +16,7 @@ const Home = () => {
   const [showHimno, setShowHimno] = useState(false);
   const [showAvisos, setShowAvisos] = useState(false);
 
-  const avisos = [Aviso];
+  const avisos = [NoticiaCMP, Aviso];
   const totalAvisos = avisos.length;
 
   // Beneficios y valores de la junta directiva

@@ -622,7 +622,8 @@ const NoticiasAdmin = () => {
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="outline-secondary" onClick={handleClose}>
+          <Button className="btn-secondary-custom" onClick={handleClose}>
+            <i className="bi bi-x-lg me-2" />
             Cancelar
           </Button>
           <Button variant="primary" onClick={handleSave} disabled={saving}>
