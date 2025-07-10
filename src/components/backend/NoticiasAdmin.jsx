@@ -296,8 +296,8 @@ const NoticiasAdmin = () => {
           <Card className="filter-card mb-4">
             <Card.Body className="p-4">
               <div className="filters-header mb-3">
-                <h5 className="filters-title">
-                  <i className="bi bi-funnel me-2"></i>
+                <h5 className="filters-title mb-3">
+                  <i className="bi bi-funnel me-2" />
                   Filtros de búsqueda
                 </h5>
               </div>

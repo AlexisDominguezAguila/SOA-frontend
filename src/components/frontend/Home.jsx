@@ -16,7 +16,8 @@ const Home = () => {
   const [showHimno, setShowHimno] = useState(false);
   const [showAvisos, setShowAvisos] = useState(false);
 
-  const avisos = [NoticiaCMP, Aviso];
+  const [avisos, setAvisos] = useState([]);
+
   const totalAvisos = avisos.length;
 
   // Beneficios y valores de la junta directiva
@@ -98,6 +99,24 @@ const Home = () => {
     };
 
     fetchLatestNews();
+  }, []);
+
+  useEffect(() => {
+    const fetchComunicados = async () => {
+      try {
+        const { data } = await api.get("/public/comunicados");
+
+        const filtered = Array.isArray(data)
+          ? data.filter((c) => c.status === "active")
+          : [];
+
+        setAvisos(filtered);
+      } catch (error) {
+        console.error("Error al cargar los comunicados:", error);
+      }
+    };
+
+    fetchComunicados();
   }, []);
 
   // Función para truncar
@@ -900,14 +919,14 @@ const Home = () => {
           >
             <i className="bi bi-megaphone-fill fs-4 text-white"></i>
 
-            {/* Badge contador - ahora posicionado correctamente */}
+            {/* Badge contador  */}
             {totalAvisos > 0 && (
               <span
                 className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
                 style={{
                   fontSize: "0.75rem",
                   padding: "0.4em 0.6em",
-                  transform: "translate(-50%, -50%)", // Ajuste fino
+                  transform: "translate(-50%, -50%)",
                 }}
               >
                 {totalAvisos}
@@ -939,12 +958,13 @@ const Home = () => {
             ) : (
               <>
                 <Carousel>
-                  {avisos.map((img, idx) => (
+                  {avisos.map((aviso, idx) => (
                     <Carousel.Item key={idx}>
                       <img
-                        src={img}
+                        src={aviso.image_url}
                         className="d-block w-100"
                         alt={`Aviso ${idx + 1}`}
+                        style={{ objectFit: "cover", height: "auto" }}
                       />
                     </Carousel.Item>
                   ))}
