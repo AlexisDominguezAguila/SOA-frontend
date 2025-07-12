@@ -1,122 +1,222 @@
 "use client";
 
-// src/components/backend/ConveniosAdmin.jsx
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
-  Table,
   Button,
-  Modal,
+  Card,
+  Col,
   Form,
   InputGroup,
+  Modal,
   Pagination,
-  Badge,
-  Card,
   Row,
-  Col,
+  Table,
+  Spinner,
 } from "react-bootstrap";
 
 import DashboardSidebar from "@/components/common/Sidebar";
+import api from "@/services/api";
+import Swal from "sweetalert2";
 import "@/components/backend/layout/dashboard.scss";
-import "@/components/backend/layout/ConveniosAdmin.scss";
-import convenio from "@/assets/images/convenio.jpeg";
 
-/* ───── Datos dummy solo para maqueta ───── */
-const DUMMY_DATA = [
-  {
-    id: 1,
-    img: convenio, // ← aquí la usas
-    title: "Convenio Universidad X",
-    bullets: ["Descuento 30%", "Acceso a biblioteca virtual"],
-    url: convenio, // si quieres que el enlace abra la imagen
-    status: "active",
-    created_at: "2024-01-15",
-  },
-  {
-    id: 2,
-    img: convenio, // mismo placeholder
-    title: "Programa Talento Y",
-    bullets: ["Mentorías", "Bolsa de trabajo", "Networking"],
-    url: "https://talentoy.org", // o un enlace externo normal
-    status: "active",
-    created_at: "2024-01-10",
-  },
-  {
-    id: 3,
-    img: convenio,
-    title: "Instituto Tecnológico Z",
-    bullets: ["Certificaciones gratuitas", "Cursos especializados"],
-    url: "https://institutoz.edu",
-    status: "inactive",
-    created_at: "2024-01-05",
-  },
-  {
-    id: 4,
-    img: convenio,
-    title: "Instituto Tecnológico Z",
-    bullets: ["Certificaciones gratuitas", "Cursos especializados"],
-    url: "https://institutoz.edu",
-    status: "inactive",
-    created_at: "2024-01-05",
-  },
-  {
-    id: 5,
-    img: convenio,
-    title: "Instituto Tecnológico Z",
-    bullets: ["Certificaciones gratuitas", "Cursos especializados"],
-    url: "https://institutoz.edu",
-    status: "inactive",
-    created_at: "2024-01-05",
-  },
-];
-
+const emptyConvenios = {
+  id: null,
+  imageUrl: "",
+  file: null,
+  title: "",
+  beneficios: "",
+  url: "",
+  status: "active",
+};
 const ConveniosAdmin = () => {
   /* ───── state UI ───── */
+  const [data, setData] = useState([]);
+  const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const pageSize = 5;
+  const [showModal, setShowModal] = useState(false);
+  const [form, setForm] = useState({ ...emptyConvenios });
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [loading, setLoading] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+  const [saving, setSaving] = useState(false);
+
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
 
-  /* modal & form */
-  const [showModal, setShowModal] = useState(false);
-  const [editingItem, setEditingItem] = useState(null);
-  const handleClose = () => {
-    setShowModal(false);
-    setEditingItem(null);
+  /* ----------------------------- fetch ----------------------------------- */
+  const fetchConvenios = async () => {
+    try {
+      setLoading(true);
+      const { data } = await api.get("/convenios", {
+        params: { per_page: 100 },
+      });
+      setData(data.data ?? data);
+    } catch (e) {
+      console.error(e);
+      Swal.fire({
+        title: "Error",
+        text: "No se pudieron obtener los convenios",
+        icon: "error",
+        confirmButtonColor: "#5C0655",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
-  const handleShow = () => setShowModal(true);
-  const handleEdit = (item) => {
-    setEditingItem(item);
+
+  useEffect(() => {
+    fetchConvenios();
+  }, []);
+
+  /* --------------------------- validaciones ------------------------------ */
+  const validateForm = () => {
+    if (!form.title.trim()) throw new Error("El título es obligatorio");
+    if (form.file && form.file.size > 2 * 1024 * 1024)
+      throw new Error("La imagen no puede superar los 2MB");
+    if (form.url && !/^https?:\/\//i.test(form.url))
+      throw new Error("La URL no es válida");
+  };
+
+  /* ----------------------------- save ------------------------------------ */
+  const handleSave = async () => {
+    try {
+      validateForm();
+      setSaving(true);
+
+      const formData = new FormData();
+      formData.append("titulo", form.title);
+      formData.append("beneficios", form.beneficios);
+      formData.append("url", form.url);
+      formData.append("activo", form.status);
+      if (form.file) formData.append("imagen", form.file);
+
+      if (form.id) {
+        await api.post(`/convenios/${form.id}?_method=PUT`, formData);
+        Swal.fire(
+          "Actualizado",
+          "Convenio actualizado correctamente",
+          "success"
+        );
+      } else {
+        await api.post("/convenios", formData);
+        Swal.fire("Guardado", "Convenio registrado correctamente", "success");
+      }
+
+      handleClose();
+      fetchConvenios();
+    } catch (e) {
+      Swal.fire("Error", e.message || "No se pudo guardar", "error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  /* ----------------------------- delete ---------------------------------- */
+  const handleDelete = async (id) => {
+    const confirm = await Swal.fire({
+      title: "¿Estás seguro?",
+      text: "Esta acción no se puede deshacer",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    try {
+      setDeletingId(id);
+      await api.delete(`/convenios/${id}`);
+      Swal.fire("Eliminado", "Convenio eliminado correctamente", "success");
+      fetchConvenios();
+    } catch (e) {
+      Swal.fire("Error", "No se pudo eliminar el convenio", "error");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  /* ----------------------------- modal helpers -------------------------- */
+  const handleOpen = () => setShowModal(true);
+  const handleClose = () => {
+    setForm({ ...emptyConvenios });
+    setShowModal(false);
+  };
+
+  const handleEdit = (c) => {
+    setForm({
+      ...emptyConvenios,
+      id: c.id,
+      imageUrl: c.image_url ?? c.imageUrl,
+      title: c.title,
+      description: c.description,
+      url: c.url,
+      status: c.status,
+    });
     setShowModal(true);
   };
 
-  /* listado, búsqueda y paginación */
-  const [data] = useState(DUMMY_DATA);
-  const [query, setQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const handleChange = (e) => {
+    const { name, value, type, checked, files } = e.target;
+    if (name === "file") {
+      if (files[0]) {
+        const validTypes = [
+          "image/jpeg",
+          "image/png",
+          "image/jpg",
+          "image/webp",
+        ];
+        if (!validTypes.includes(files[0].type)) {
+          Swal.fire({
+            title: "Formato inválido",
+            text: "Solo se permiten imágenes JPG, PNG o WEBP",
+            icon: "warning",
+            confirmButtonColor: "#5C0655",
+          });
+          return;
+        }
+      }
 
+      setForm((f) => ({
+        ...f,
+        imageUrl: files[0] ? URL.createObjectURL(files[0]) : "",
+        file: files[0] || null,
+      }));
+    } else {
+      setForm((f) => ({ ...f, [name]: type === "checkbox" ? checked : value }));
+    }
+  };
+  /* ---------------------- filtros y paginación -------------------------- */
   const filtered = data.filter((c) => {
-    const matchesQuery = c.title.toLowerCase().includes(query.toLowerCase());
+    const title = c.title || ""; // Si title es undefined, usa string vacío
+    const matchesTitle = title.toLowerCase().includes(query.toLowerCase());
     const matchesStatus = statusFilter === "all" || c.status === statusFilter;
-    return matchesQuery && matchesStatus;
+    return matchesTitle && matchesStatus;
   });
 
-  // paginación cliente‑side: 5 por página
-  const pageSize = 4;
-  const [page, setPage] = useState(1);
   const pages = Math.ceil(filtered.length / pageSize);
   const view = filtered.slice((page - 1) * pageSize, page * pageSize);
 
-  const getStatusBadge = (status) => {
-    return status === "active" ? (
-      <Badge bg="success" className="status-badge">
-        <i className="bi bi-check-circle me-1"></i>Activo
-      </Badge>
-    ) : (
-      <Badge bg="secondary" className="status-badge">
-        <i className="bi bi-pause-circle me-1"></i>Inactivo
-      </Badge>
-    );
-  };
+  /* -------------------------- helpers UI ------------------------------- */
+  const formatDate = (dateStr) =>
+    new Date(dateStr).toLocaleDateString("es-ES", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
 
+  const getStatusBadge = (status) => (
+    <span
+      className={`status-badge ${
+        status === "active" ? "status-active" : "status-inactive"
+      }`}
+    >
+      {status === "active" ? "Activa" : "Inactiva"}
+    </span>
+  );
   return (
     <div className="dashboard-container min-vh-100">
       {/* Sidebar */}
@@ -153,7 +253,7 @@ const ConveniosAdmin = () => {
                 </div>
               </div>
               <div className="header-actions">
-                <Button className="btn-primary-custom" onClick={handleShow}>
+                <Button className="btn-primary-custom" onClick={handleOpen}>
                   <i className="bi bi-plus-lg me-2"></i>
                   Nuevo Convenio
                 </Button>
@@ -198,15 +298,9 @@ const ConveniosAdmin = () => {
                     }}
                     className="status-filter"
                   >
-                    <option value="all">
-                      <i className="bi bi-newspaper me-3"></i> Todos los estados
-                    </option>
-                    <option value="active">
-                      <i className="bi bi-newspaper me-3"></i> Activos
-                    </option>
-                    <option value="inactive">
-                      <i className="bi bi-newspaper me-3"></i> Inactivos
-                    </option>
+                    <option value="all">Todos los estados</option>
+                    <option value="active">Activos</option>
+                    <option value="inactive">Inactivos</option>
                   </Form.Select>
                 </Col>
                 <Col lg={2} md={2}>
@@ -236,119 +330,112 @@ const ConveniosAdmin = () => {
           </Card>
 
           {/* Tabla de convenios */}
+          {/* ───────── Tabla de Convenios ───────── */}
           <Card className="table-card">
             <Card.Body className="p-0">
               <div className="table-header">
                 <h5 className="table-title mb-0 p-4">
-                  <i className="bi bi-list-ul me-2"></i>Lista de Convenios
+                  <i className="bi bi-list-ul me-2"></i>
+                  Lista de Convenios
                 </h5>
               </div>
-
               <div className="table-responsive">
                 <Table bsPrefix="modern-table" className="modern-table mb-0">
                   <thead>
                     <tr>
-                      <th className="table-header">#</th>
-                      <th className="table-header">Logo</th>
-                      <th className="table-header">Información</th>
-                      <th className="table-header">Beneficios</th>
-                      <th className="table-header">Estado</th>
-                      <th className="table-header">Enlace</th>
-                      <th className="table-header text-end">Acciones</th>
+                      <th className="table-header-cell">#</th>
+                      <th className="table-header-cell">Vista Previa</th>
+                      <th className="table-header-cell">Información</th>
+                      <th className="table-header-cell">Enlace</th>
+                      <th className="table-header-cell">Estado</th>
+                      <th className="text-center">Acciones</th>
                     </tr>
                   </thead>
-
                   <tbody>
-                    {view.length > 0 ? (
+                    {loading ? (
+                      <tr>
+                        <td colSpan="6" className="text-center py-5">
+                          <Spinner animation="border" variant="primary" />
+                          <p className="mt-2">Cargando convenios...</p>
+                        </td>
+                      </tr>
+                    ) : view.length > 0 ? (
                       view.map((c, i) => (
                         <tr key={c.id} className="table-row">
-                          <td className="row-number">
-                            {(page - 1) * pageSize + (i + 1)}
+                          <td className="table-cell">
+                            <span className="row-number">
+                              {(page - 1) * pageSize + i + 1}
+                            </span>
                           </td>
 
-                          <td className="logo-cell">
-                            <div className="logo-container">
+                          <td className="table-cell">
+                            <div className="image-container">
                               <img
-                                src={c.img || "/placeholder.svg"}
+                                src={
+                                  c.image_url || "@/assets/images/convenio.jpeg"
+                                }
                                 alt={c.title}
-                                className="convenio-logo"
+                                className="table-image"
                                 onError={(e) => {
-                                  e.target.src =
-                                    "/placeholder.svg?height=40&width=40";
+                                  e.target.src = "/placeholder-avatar.png";
                                 }}
                               />
                             </div>
                           </td>
 
-                          <td className="info-cell">
+                          <td className="table-cell">
                             <div>
-                              <h6 className="convenio-title mb-1">{c.title}</h6>
-                              <small className="convenio-date text-muted">
+                              <h6 className="table-title">{c.title}</h6>
+                              <span className="date-info">
                                 <i className="bi bi-calendar3 me-1"></i>
-                                Creado:{" "}
-                                {new Date(c.created_at).toLocaleDateString()}
-                              </small>
+                                {formatDate(c.created_at)}
+                              </span>
                             </div>
                           </td>
 
-                          <td className="benefits-cell">
-                            <div className="benefits-container">
-                              <Badge bg="info" className="benefits-count">
-                                <i className="bi bi-list-ul me-1"></i>
-                                {c.bullets.length} beneficios
-                              </Badge>
-                              <div className="benefits-preview mt-1">
-                                {c.bullets.slice(0, 2).map((bullet, idx) => (
-                                  <small
-                                    key={idx}
-                                    className="benefit-item d-block text-muted"
-                                  >
-                                    • {bullet}
-                                  </small>
-                                ))}
-                                {c.bullets.length > 2 && (
-                                  <small className="text-muted">
-                                    +{c.bullets.length - 2} más...
-                                  </small>
-                                )}
-                              </div>
+                          <td className="table-cell">
+                            <div className="tag-list">
+                              <Button
+                                size="sm"
+                                className="btn-action btn-view"
+                                variant="outline-primary"
+                                onClick={() => window.open(c.url, "_blank")}
+                                title="Ver convenio"
+                              >
+                                <i className="bi bi-box-arrow-up-right"></i>
+                              </Button>
                             </div>
                           </td>
 
-                          <td className="status-cell">
+                          <td className="table-cell">
                             {getStatusBadge(c.status)}
                           </td>
 
-                          <td className="link-cell">
-                            <a
-                              href={c.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="external-link"
-                            >
-                              <i className="bi bi-box-arrow-up-right me-1"></i>
-                              Visitar
-                            </a>
-                          </td>
-
-                          <td className="actions-cell text-end">
+                          <td className="table-cell text-center">
                             <div className="action-buttons">
                               <Button
                                 size="sm"
-                                variant="outline-primary"
-                                className="action-btn edit-btn me-2"
+                                className="btn-action btn-edit"
+                                variant="outline-secondary"
                                 onClick={() => handleEdit(c)}
-                                title="Editar convenio"
+                                title="Editar"
                               >
-                                <i className="bi bi-pencil"></i>
+                                <i className="bi bi-pencil-square"></i>
                               </Button>
+
                               <Button
                                 size="sm"
+                                className="btn-action btn-delete"
                                 variant="outline-danger"
-                                className="action-btn delete-btn"
-                                title="Eliminar convenio"
+                                disabled={deletingId === c.id}
+                                onClick={() => handleDelete(c.id)}
+                                title="Eliminar"
                               >
-                                <i className="bi bi-trash"></i>
+                                {deletingId === c.id ? (
+                                  <Spinner animation="border" size="sm" />
+                                ) : (
+                                  <i className="bi bi-trash"></i>
+                                )}
                               </Button>
                             </div>
                           </td>
@@ -356,16 +443,18 @@ const ConveniosAdmin = () => {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="7" className="text-center py-5">
+                        <td colSpan={6} className="text-center py-5">
                           <div className="empty-state">
-                            <i className="bi bi-inbox fs-1 mb-3 d-block text-muted"></i>
-                            <h5 className="mb-1">
-                              No se encontraron convenios
-                            </h5>
-                            <p className="text-muted mb-0">
+                            <i className="bi bi-inbox"></i>
+                            <h5>
                               {query
-                                ? "Intenta con otros términos de búsqueda"
-                                : "Comienza agregando un nuevo convenio"}
+                                ? "No se encontraron resultados para tu búsqueda"
+                                : "Aún no has registrado ningún convenio"}
+                            </h5>
+                            <p>
+                              {query
+                                ? "Prueba con otros términos o verifica la ortografía"
+                                : "Empieza registrando tu primer convenio"}
                             </p>
                           </div>
                         </td>
@@ -377,127 +466,118 @@ const ConveniosAdmin = () => {
             </Card.Body>
           </Card>
 
-          {/* Paginación */}
+          {/* ───────── Paginación ───────── */}
           {pages > 1 && (
-            <div className="pagination-container mt-4">
-              <div className="d-flex justify-content-between align-items-center">
-                <div className="pagination-info">
-                  <small className="text-muted">
-                    Mostrando {(page - 1) * pageSize + 1} -{" "}
-                    {Math.min(page * pageSize, filtered.length)} de{" "}
-                    {filtered.length} convenios
-                  </small>
-                </div>
-                <Pagination className="custom-pagination mb-0">
-                  <Pagination.Prev
-                    disabled={page === 1}
-                    onClick={() => setPage((p) => p - 1)}
-                  />
-                  {[...Array(pages)].map((_, idx) => (
-                    <Pagination.Item
-                      key={idx}
-                      active={idx + 1 === page}
-                      onClick={() => setPage(idx + 1)}
-                    >
-                      {idx + 1}
-                    </Pagination.Item>
-                  ))}
-                  <Pagination.Next
-                    disabled={page === pages}
-                    onClick={() => setPage((p) => p + 1)}
-                  />
-                </Pagination>
-              </div>
+            <div className="pagination-outer-container mt-4">
+              <Pagination className="custom-pagination">
+                <Pagination.Prev
+                  disabled={page === 1}
+                  onClick={() => setPage(page - 1)}
+                  className="pagination-control"
+                >
+                  <i className="bi bi-chevron-left"></i>
+                </Pagination.Prev>
+                {[...Array(pages)].map((_, i) => (
+                  <Pagination.Item
+                    key={i}
+                    active={page === i + 1}
+                    onClick={() => setPage(i + 1)}
+                    className="pagination-item"
+                  >
+                    {i + 1}
+                  </Pagination.Item>
+                ))}
+                <Pagination.Next
+                  disabled={page === pages}
+                  onClick={() => setPage(page + 1)}
+                  className="pagination-control"
+                >
+                  <i className="bi bi-chevron-right"></i>
+                </Pagination.Next>
+              </Pagination>
             </div>
           )}
         </section>
       </main>
 
       {/* Modal formulario */}
-      <Modal
-        show={showModal}
-        onHide={handleClose}
-        centered
-        size="lg"
-        className="convenio-modal"
-      >
-        <Modal.Header closeButton className="modal-header-custom">
-          <Modal.Title className="modal-title-custom">
-            <i className="bi bi-handshake me-2"></i>
-            {editingItem ? "Editar Convenio" : "Nuevo Convenio"}
+      <Modal show={showModal} onHide={handleClose} size="lg" centered>
+        <Modal.Header closeButton>
+          <Modal.Title>
+            <i className="bi bi-file-earmark-richtext me-2"></i>
+            {form.id ? "Editar Convenio" : "Nuevo Convenio"}
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body className="modal-body-custom">
+
+        <Modal.Body>
           <Form>
-            <Row>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label className="form-label-custom">
-                    <i className="bi bi-image me-2"></i>Logo del convenio
-                  </Form.Label>
+            {/* Imagen */}
+            <Row className="mb-3">
+              <Col md={12}>
+                <Form.Group>
+                  <Form.Label>Imagen del convenio</Form.Label>
                   <Form.Control
                     type="file"
+                    name="file"
                     accept="image/*"
-                    className="form-control-custom"
+                    onChange={handleChange}
                   />
-                  <Form.Text className="text-muted">
-                    Formatos soportados: JPG, PNG, SVG (máx. 2MB)
-                  </Form.Text>
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label className="form-label-custom">
-                    <i className="bi bi-type me-2"></i>Título del convenio
-                  </Form.Label>
-                  <Form.Control
-                    placeholder="Ej: Universidad Nacional de Colombia"
-                    className="form-control-custom"
-                    defaultValue={editingItem?.title || ""}
-                  />
+                  {form.imageUrl && (
+                    <img
+                      src={form.imageUrl}
+                      alt="preview"
+                      className="img-fluid mt-2 rounded"
+                      style={{ maxHeight: 180 }}
+                    />
+                  )}
                 </Form.Group>
               </Col>
             </Row>
-
+            {/* Título */}
             <Form.Group className="mb-3">
-              <Form.Label className="form-label-custom">
-                <i className="bi bi-list-ul me-2"></i>Beneficios y ventajas
-              </Form.Label>
+              <Form.Label>Título del convenio</Form.Label>
+              <Form.Control
+                name="title"
+                value={form.title}
+                onChange={handleChange}
+                placeholder="Nombre del convenio"
+              />
+            </Form.Group>
+            {/* Beneficios */}
+            <Form.Group className="mb-3">
+              <Form.Label>Beneficios</Form.Label>
               <Form.Control
                 as="textarea"
-                rows={4}
-                placeholder="Escribe cada beneficio en una línea separada&#10;Ej:&#10;• Descuento del 20% en matrículas&#10;• Acceso gratuito a biblioteca digital&#10;• Mentorías especializadas"
-                className="form-control-custom"
-                defaultValue={editingItem?.bullets?.join("\n") || ""}
+                rows={3}
+                name="beneficios"
+                value={form.beneficios}
+                onChange={handleChange}
+                placeholder={
+                  "• Acceso a descuentos especiales\n• Asesoría gratuita\n• Certificación digital"
+                }
               />
-              <Form.Text className="text-muted">
-                Cada línea será un beneficio independiente. Usa viñetas (•) para
-                mejor presentación.
-              </Form.Text>
             </Form.Group>
 
-            <Row>
+            {/* URL y Estado */}
+            <Row className="mb-3">
               <Col md={8}>
-                <Form.Group className="mb-3">
-                  <Form.Label className="form-label-custom">
-                    <i className="bi bi-link-45deg me-2"></i>URL del convenio
-                  </Form.Label>
+                <Form.Group>
+                  <Form.Label>URL del convenio</Form.Label>
                   <Form.Control
-                    type="url"
-                    placeholder="https://ejemplo.com/convenio"
-                    className="form-control-custom"
-                    defaultValue={editingItem?.url || ""}
+                    name="url"
+                    value={form.url}
+                    onChange={handleChange}
+                    placeholder="https://institucion.com/convenio"
                   />
                 </Form.Group>
               </Col>
               <Col md={4}>
-                <Form.Group className="mb-3">
-                  <Form.Label className="form-label-custom">
-                    <i className="bi bi-toggle-on me-2"></i>Estado
-                  </Form.Label>
+                <Form.Group>
+                  <Form.Label>Estado</Form.Label>
                   <Form.Select
-                    className="form-control-custom"
-                    defaultValue={editingItem?.status || "active"}
+                    name="status"
+                    value={form.status}
+                    onChange={handleChange}
                   >
                     <option value="active">Activo</option>
                     <option value="inactive">Inactivo</option>
@@ -507,17 +587,20 @@ const ConveniosAdmin = () => {
             </Row>
           </Form>
         </Modal.Body>
-        <Modal.Footer className="modal-footer-custom">
-          <Button
-            variant="outline-secondary"
-            onClick={handleClose}
-            className="btn-cancel"
-          >
-            <i className="bi bi-x-lg me-2"></i>Cancelar
+
+        <Modal.Footer>
+          <Button className="btn-secondary-custom" onClick={handleClose}>
+            <i className="bi bi-x-lg me-2" />
+            Cancelar
           </Button>
-          <Button variant="primary" className="btn-save">
-            <i className="bi bi-check-lg me-2"></i>
-            {editingItem ? "Actualizar" : "Guardar"} Convenio
+          <Button variant="primary" onClick={handleSave} disabled={saving}>
+            {saving ? (
+              <Spinner animation="border" size="sm" />
+            ) : form.id ? (
+              "Actualizar"
+            ) : (
+              "Guardar"
+            )}
           </Button>
         </Modal.Footer>
       </Modal>
