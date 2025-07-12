@@ -36,7 +36,7 @@ const Header = () => {
                   Junta Directiva
                 </NavDropdown.Item>
                 <NavDropdown.Item as={NavLink} to="/junta-directiva">
-                  Gestión 2024-2027
+                  Gestión CMP
                 </NavDropdown.Item>
 
                 <NavDropdown.Divider />

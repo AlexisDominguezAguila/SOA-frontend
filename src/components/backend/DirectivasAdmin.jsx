@@ -18,113 +18,15 @@ import DashboardHeader from "@/components/common/HeaderAdmin";
 import DashboardSidebar from "@/components/common/Sidebar";
 import "@/components/backend/layout/dashboard.scss";
 import "@/components/backend/layout/gestion.scss";
-
 import Placeholder from "@/assets/images/doctor.webp";
-
-const dummyGestiones = [
-  // {
-  //   id: 1,
-  //   nombre: "Gestión 2020-2023",
-  //   lema: "Comprometidos con la ética, la excelencia y la vocación de servicio",
-  //   inicio: "2020",
-  //   fin: "2023",
-  //   isActive: true,
-  //   miembros: [
-  //     {
-  //       id: 1,
-  //       nombre: "Ing. Juan Pérez",
-  //       cargo: "Presidente",
-  //       img: Placeholder,
-  //       isActive: true,
-  //     },
-  //     {
-  //       id: 2,
-  //       nombre: "Dra. Ana López",
-  //       cargo: "Secretaria",
-  //       img: Placeholder,
-  //       isActive: true,
-  //     },
-  //     {
-  //       id: 3,
-  //       nombre: "Dr. José García",
-  //       cargo: "Tesorero",
-  //       img: Placeholder,
-  //       isActive: false,
-  //     },
-  //   ],
-  // },
-  // {
-  //   id: 2,
-  //   nombre: "Gestión 2017-2020",
-  //   lema: "Unidos somos más",
-  //   inicio: "2017",
-  //   fin: "2020",
-  //   status: "inactive",
-  //   miembros: [
-  //     {
-  //       id: 4,
-  //       nombre: "Lic. Marta Salazar",
-  //       cargo: "Presidenta",
-  //       img: Placeholder,
-  //       isActive: false,
-  //     },
-  //     {
-  //       id: 5,
-  //       nombre: "Dr. Luis Ramírez",
-  //       cargo: "Secretario",
-  //       img: Placeholder,
-  //       isActive: false,
-  //     },
-  //   ],
-  // },
-  // {
-  //   id: 3,
-  //   nombre: "Gestión 2014-2017",
-  //   lema: "Desarrollo sostenible",
-  //   inicio: "2014",
-  //   fin: "2017",
-  //   isActive: false,
-  //   miembros: [
-  //     {
-  //       id: 6,
-  //       nombre: "Lic. Carlos Rodríguez",
-  //       cargo: "Presidente",
-  //       img: Placeholder,
-  //       isActive: false,
-  //     },
-  //     {
-  //       id: 7,
-  //       nombre: "Ing. Teresa Méndez",
-  //       cargo: "Tesorera",
-  //       img: Placeholder,
-  //       isActive: false,
-  //     },
-  //   ],
-  // },
-  // {
-  //   id: 4,
-  //   nombre: "Gestión 2011-2014",
-  //   lema: "Creciendo juntos",
-  //   inicio: "2011",
-  //   fin: "2014",
-  //   isActive: false,
-  //   miembros: [
-  //     {
-  //       id: 8,
-  //       nombre: "Dr. Víctor Andrade",
-  //       cargo: "Presidente",
-  //       img: Placeholder,
-  //       isActive: false,
-  //     },
-  //   ],
-  // },
-];
+import api from "@/services/api";
+import Swal from "sweetalert2";
 
 const DirectivasAdmin = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
+  const [gestiones, setGestiones] = useState([]);
 
-  const [gestiones, setGestiones] = useState(dummyGestiones);
   const [showModal, setShowModal] = useState(false);
   const [editingGestion, setEditingGestion] = useState(null);
   const [expanded, setExpanded] = useState(null);
@@ -136,28 +38,69 @@ const DirectivasAdmin = () => {
   const [saving, setSaving] = useState(false);
   const [loadingMiembros, setLoadingMiembros] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [showMiembroModal, setShowMiembroModal] = useState(false);
+  const [editingMiembro, setEditingMiembro] = useState(null);
+  const [gestionSeleccionada, setGestionSeleccionada] = useState(null);
+  const [nombre, setNombre] = useState("");
+  const [cargo, setCargo] = useState("");
+  const [estado, setEstado] = useState("active");
+  const [imagen, setImagen] = useState(null);
 
   const handleShow = () => setShowModal(true);
   const handleClose = () => {
     setShowModal(false);
     setEditingGestion(null);
   };
-
+  const fetchGestiones = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get("/gestiones");
+      setGestiones(res.data?.data ?? []);
+    } catch (error) {
+      console.error("Error al obtener gestiones:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se puedieron cargar las gestiones. Intente nuevamente.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
   const handleEditGestion = (g) => {
     setEditingGestion(g);
     setShowModal(true);
   };
+  //abrir y cerrar modal de miembros de juntas directivas
+  const handleAgregarMiembro = (gestion) => {
+    setGestionSeleccionada(gestion);
+    setEditingMiembro(null);
+    setShowMiembroModal(true);
+  };
 
-  // Simulación de carga de datos
+  const handleEditarMiembro = (gestion, miembro) => {
+    setGestionSeleccionada(gestion);
+    setEditingMiembro(miembro);
+    setShowMiembroModal(true);
+  };
+
+  const handleCerrarMiembroModal = () => {
+    setShowMiembroModal(false);
+    setEditingMiembro(null);
+    setGestionSeleccionada(null);
+
+    setNombre("");
+    setCargo("");
+    setEstado("active");
+    setImagen(null);
+  };
+
   useEffect(() => {
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-    }, 800);
+    fetchGestiones();
   }, []);
 
   // Filtrado de gestiones
-  const filtered = gestiones.filter((g) => {
+  const filtered = (gestiones ?? []).filter((g) => {
     const matchesName = g.nombre.toLowerCase().includes(query.toLowerCase());
     const matchesStatus = statusFilter === "all" || g.status === statusFilter;
     return matchesName && matchesStatus;
@@ -165,6 +108,206 @@ const DirectivasAdmin = () => {
 
   const pages = Math.ceil(filtered.length / pageSize);
   const view = filtered.slice((page - 1) * pageSize, page * pageSize);
+  useEffect(() => {
+    if (editingMiembro) {
+      setNombre(editingMiembro.nombre);
+      setCargo(editingMiembro.cargo);
+      setEstado(editingMiembro.is_active ? "active" : "inactive");
+      setImagen(null);
+    } else {
+      setNombre("");
+      setCargo("");
+      setEstado("active");
+      setImagen(null);
+    }
+  }, [editingMiembro]);
+  const handleImageChange = (e) => {
+    setImagen(e.target.files[0]);
+  };
+
+  const handleGuardarGestion = async () => {
+    // Validación de años
+    const inicio = parseInt(editingGestion?.inicio);
+    const fin = parseInt(editingGestion?.fin);
+
+    if (fin <= inicio) {
+      Swal.fire({
+        icon: "error",
+        title: "Años inválidos",
+        text: "El año fin debe ser mayor al año inicio",
+      });
+      return;
+    }
+
+    const payload = {
+      nombre: editingGestion?.nombre || "Gestión sin nombre",
+      lema: editingGestion?.lema || null,
+      inicio: inicio,
+      fin: fin,
+      status: editingGestion?.status || "active",
+    };
+
+    try {
+      setSaving(true);
+      let message = "";
+
+      if (editingGestion?.id) {
+        await api.put(`/gestiones/${editingGestion.id}`, payload);
+        message = "Gestión actualizada correctamente";
+      } else {
+        await api.post("/gestiones", payload);
+        message = "Gestión registrada correctamente";
+      }
+
+      Swal.fire({
+        icon: "success",
+        title: "Éxito",
+        text: message,
+      });
+
+      handleClose();
+      fetchGestiones();
+    } catch (error) {
+      console.error("Error al guardar gestión:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Ocurrió un error al guardar la gestión",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleEliminarGestion = async (gestion) => {
+    const result = await Swal.fire({
+      title: "¿Eliminar gestión completa?",
+      html: `Esta acción eliminará la gestión <b>${gestion.nombre}</b> y todos sus ${gestion.miembros.length} miembros.<br>¿Está seguro?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Sí, eliminar todo",
+      cancelButtonText: "Cancelar",
+      showLoaderOnConfirm: true,
+      preConfirm: async () => {
+        try {
+          await api.delete(`/gestiones/${gestion.id}`);
+          return true;
+        } catch (error) {
+          Swal.showValidationMessage(
+            `Error al eliminar: ${
+              error.response?.data?.message || error.message
+            }`
+          );
+          return false;
+        }
+      },
+    });
+
+    if (result.isConfirmed) {
+      if (result.value) {
+        Swal.fire({
+          icon: "success",
+          title: "Eliminado",
+          html: `La gestión <b>${gestion.nombre}</b> y sus miembros fueron eliminados`,
+        });
+        fetchGestiones();
+      }
+    }
+  };
+  const handleGuardarMiembro = async () => {
+    if (!nombre || !cargo) {
+      Swal.fire({
+        icon: "warning",
+        title: "Campos requeridos",
+        text: "Nombre y cargo son obligatorios",
+      });
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("nombre", nombre);
+    formData.append("cargo", cargo);
+    formData.append("estado", estado);
+    formData.append("gestion_id", gestionSeleccionada.id);
+    if (imagen) {
+      formData.append("imagen", imagen);
+    }
+
+    try {
+      setSaving(true);
+      let message = "";
+
+      if (editingMiembro) {
+        formData.append("_method", "PUT");
+        await api.post(`/miembros/${editingMiembro.id}`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        message = "Miembro actualizado correctamente";
+      } else {
+        await api.post("/miembros", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        message = "Miembro registrado correctamente";
+      }
+
+      Swal.fire({
+        icon: "success",
+        title: "Éxito",
+        text: message,
+      });
+
+      handleCerrarMiembroModal();
+      fetchGestiones();
+    } catch (error) {
+      console.error("Error al guardar miembro:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Ocurrió un error al guardar el miembro",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleEliminarMiembro = async (gestion, miembro) => {
+    const result = await Swal.fire({
+      title: "¿Eliminar miembro?",
+      html: `¿Está seguro de eliminar a <b>${miembro.nombre}</b> de la gestión <b>${gestion.nombre}</b>?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+    });
+
+    if (result.isConfirmed) {
+      try {
+        setDeletingId(miembro.id);
+        await api.delete(`/miembros/${miembro.id}`);
+
+        Swal.fire({
+          icon: "success",
+          title: "Eliminado",
+          text: "El miembro ha sido eliminado",
+        });
+
+        fetchGestiones();
+      } catch (error) {
+        console.error("Error al eliminar miembro:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "No se pudo eliminar el miembro",
+        });
+      } finally {
+        setDeletingId(null);
+      }
+    }
+  };
 
   return (
     <div className="dashboard-container min-vh-100">
@@ -313,14 +456,12 @@ const DirectivasAdmin = () => {
                               </div>
                               <span
                                 className={`status-badge ${
-                                  g.is_active ?? g.isActive
+                                  g.status === "active"
                                     ? "status-active"
                                     : "status-inactive"
                                 }`}
                               >
-                                {g.is_active ?? g.isActive
-                                  ? "Activo"
-                                  : "Inactivo"}
+                                {g.status === "active" ? "Activo" : "Inactivo"}
                               </span>
                             </div>
                           </Accordion.Header>
@@ -334,19 +475,23 @@ const DirectivasAdmin = () => {
                                     {g.lema}
                                   </h5>
                                   {/*botones para editar y eliminar gestiones*/}
-                                  <div className="action-buttons d-flex align-items-center gap-2">
-                                    <Button
-                                      size="sm"
-                                      className="btn-action btn-edit"
-                                    >
-                                      <i className="bi bi-pencil"></i>
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      className="btn-action btn-delete"
-                                    >
-                                      <i className="bi bi-trash"></i>
-                                    </Button>
+                                  <div className="gestion-card">
+                                    <div className="action-buttons d-flex align-items-center gap-2">
+                                      <Button
+                                        size="sm"
+                                        className="btn-action btn-edit"
+                                        onClick={() => handleEditGestion(g)}
+                                      >
+                                        <i className="bi bi-pencil"></i>
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        className="btn-action btn-delete"
+                                        onClick={() => handleEliminarGestion(g)} // Pasamos el objeto completo
+                                      >
+                                        <i className="bi bi-trash"></i>
+                                      </Button>
+                                    </div>
                                   </div>
                                 </div>
 
@@ -403,7 +548,7 @@ const DirectivasAdmin = () => {
                                             <td className="table-cell">
                                               <div className="image-container">
                                                 <img
-                                                  src={m.img}
+                                                  src={m.img_url}
                                                   alt={m.nombre}
                                                   className="table-image"
                                                   onError={(e) => {
@@ -418,15 +563,16 @@ const DirectivasAdmin = () => {
                                             <td className="table-cell">
                                               {m.cargo}
                                             </td>
+
                                             <td>
                                               <span
                                                 className={`status-badge ${
-                                                  m.is_active ?? m.isActive
+                                                  m.is_active
                                                     ? "status-active"
                                                     : "status-inactive"
                                                 }`}
                                               >
-                                                {m.is_active ?? m.isActive
+                                                {m.is_active
                                                   ? "Activo"
                                                   : "Inactivo"}
                                               </span>
@@ -437,13 +583,20 @@ const DirectivasAdmin = () => {
                                                   size="sm"
                                                   variant="outline-primary"
                                                   className="btn-action btn-edit"
+                                                  onClick={() =>
+                                                    handleEditarMiembro(g, m)
+                                                  }
                                                 >
                                                   <i className="bi bi-pencil"></i>
                                                 </Button>
+
                                                 <Button
                                                   size="sm"
                                                   variant="outline-danger"
                                                   className="btn-action btn-delete"
+                                                  onClick={() =>
+                                                    handleEliminarMiembro(g, m)
+                                                  }
                                                 >
                                                   <i className="bi bi-trash"></i>
                                                 </Button>
@@ -477,6 +630,7 @@ const DirectivasAdmin = () => {
                                 className="btn-primary-custom"
                                 size="sm"
                                 variant="outline-success"
+                                onClick={() => handleAgregarMiembro(g)}
                               >
                                 <i className="bi bi-person-plus me-2"></i>
                                 Agregar Miembro
@@ -507,7 +661,7 @@ const DirectivasAdmin = () => {
                             onClick={handleShow}
                             className="btn-primary-custom"
                             variant="outline-success"
-                            size="sm" // <-- también reduce altura y fuente
+                            size="sm"
                           >
                             Añadir una Nueva Gestión
                           </Button>
@@ -566,14 +720,25 @@ const DirectivasAdmin = () => {
             <Form.Group className="mb-3">
               <Form.Label>Nombre de la Gestión</Form.Label>
               <Form.Control
-                defaultValue={editingGestion?.nombre || ""}
-                placeholder="Ej: Gestión 2020-2023"
+                value={editingGestion?.nombre || ""}
+                onChange={(e) =>
+                  setEditingGestion({
+                    ...editingGestion,
+                    nombre: e.target.value,
+                  })
+                }
               />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Lema</Form.Label>
               <Form.Control
-                defaultValue={editingGestion?.lema || ""}
+                value={editingGestion?.lema || ""}
+                onChange={(e) =>
+                  setEditingGestion({
+                    ...editingGestion,
+                    lema: e.target.value,
+                  })
+                }
                 placeholder="Ej: Innovar para avanzar"
               />
             </Form.Group>
@@ -585,7 +750,13 @@ const DirectivasAdmin = () => {
                     type="number"
                     min="2000"
                     max="2100"
-                    defaultValue={editingGestion?.inicio || ""}
+                    value={editingGestion?.inicio || ""}
+                    onChange={(e) =>
+                      setEditingGestion({
+                        ...editingGestion,
+                        inicio: e.target.value,
+                      })
+                    }
                     placeholder="Ej: 2020"
                   />
                 </Form.Group>
@@ -597,7 +768,13 @@ const DirectivasAdmin = () => {
                     type="number"
                     min="2000"
                     max="2100"
-                    defaultValue={editingGestion?.fin || ""}
+                    value={editingGestion?.fin || ""}
+                    onChange={(e) =>
+                      setEditingGestion({
+                        ...editingGestion,
+                        fin: e.target.value,
+                      })
+                    }
                     placeholder="Ej: 2023"
                   />
                 </Form.Group>
@@ -605,7 +782,15 @@ const DirectivasAdmin = () => {
             </Row>
             <Form.Group className="mb-3">
               <Form.Label>Estado</Form.Label>
-              <Form.Select defaultValue={editingGestion?.status || "active"}>
+              <Form.Select
+                value={editingGestion?.status || "active"}
+                onChange={(e) =>
+                  setEditingGestion({
+                    ...editingGestion,
+                    status: e.target.value,
+                  })
+                }
+              >
                 <option value="active">Activo</option>
                 <option value="inactive">Inactivo</option>
               </Form.Select>
@@ -616,7 +801,11 @@ const DirectivasAdmin = () => {
           <Button variant="secondary" onClick={handleClose}>
             Cancelar
           </Button>
-          <Button variant="primary" disabled={saving}>
+          <Button
+            variant="primary"
+            onClick={handleGuardarGestion}
+            disabled={saving}
+          >
             {saving ? (
               <>
                 <Spinner animation="border" size="sm" className="me-2" />
@@ -630,6 +819,75 @@ const DirectivasAdmin = () => {
       </Modal>
 
       {/* Modal para registrar/editar miembros de las gestiones */}
+      <Modal show={showMiembroModal} onHide={handleCerrarMiembroModal} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>
+            <i className="bi bi-person-fill me-2"></i>
+            {editingMiembro ? "Editar Miembro" : "Agregar Miembro"} —{" "}
+            {gestionSeleccionada?.nombre}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group className="mb-3">
+              <Form.Label>Nombre *</Form.Label>
+              <Form.Control
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+                placeholder="Nombre completo del médico"
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Cargo *</Form.Label>
+              <Form.Control
+                value={cargo}
+                onChange={(e) => setCargo(e.target.value)}
+                placeholder="Ej: Decano, Secretario"
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Imagen</Form.Label>
+              <Form.Control
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Estado</Form.Label>
+              <Form.Select
+                value={estado}
+                onChange={(e) => setEstado(e.target.value)}
+              >
+                <option value="active">Activo</option>
+                <option value="inactive">Inactivo</option>
+              </Form.Select>
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCerrarMiembroModal}>
+            Cancelar
+          </Button>
+          <Button
+            variant="primary"
+            onClick={handleGuardarMiembro}
+            disabled={saving}
+          >
+            {saving ? (
+              <>
+                <Spinner animation="border" size="sm" className="me-2" />
+                Guardando...
+              </>
+            ) : (
+              "Guardar Miembro"
+            )}
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };

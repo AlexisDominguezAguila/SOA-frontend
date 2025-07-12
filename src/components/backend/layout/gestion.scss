@@ -32,12 +32,9 @@
 .accordion-body {
   background-color: #1e293b;
 }
-.card {
-  border: none;
-  background-color: #1e1e2f;
-}
+
 .btn-add-gestion {
-  padding: 0.375rem 0.75rem; // equivalente al btn-sm
+  padding: 0.375rem 0.75rem;
   font-size: 0.875rem;
   line-height: 1.5;
   border-radius: 0.25rem;
@@ -45,7 +42,7 @@
   align-items: center;
 
   background-color: transparent;
-  color: #198754; // Bootstrap success
+  color: #198754;
   border: 1px solid #198754;
   transition: all 0.2s ease;
 
