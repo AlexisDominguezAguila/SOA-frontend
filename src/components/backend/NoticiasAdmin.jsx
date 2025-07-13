@@ -39,14 +39,60 @@ const NoticiasAdmin = () => {
   const [page, setPage] = useState(1);
   const pageSize = 5;
   const [showModal, setShowModal] = useState(false);
+  const [showMejorarModal, setShowMejorarModal] = useState(false);
+
   const [form, setForm] = useState({ ...emptyNews });
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [mejorarTexto, setMejorarTexto] = useState("");
+  const [textoMejorado, setTextoMejorado] = useState("");
+  const [mejorando, setMejorando] = useState(false);
 
   const toggleSidebar = () => setIsSidebarOpen((p) => !p);
+
+  /* --- Mejora de texto con IA --*/
+  const abrirModalMejorar = () => {
+    setMejorarTexto(form.description);
+    setTextoMejorado("");
+    setShowMejorarModal(true);
+  };
+
+  const aplicarMejora = () => {
+    setForm((prev) => ({ ...prev, description: textoMejorado }));
+    setShowMejorarModal(false);
+  };
+
+  const mejorarTextoIA = async () => {
+    if (!mejorarTexto.trim()) return;
+
+    try {
+      setMejorando(true);
+      const { data } = await api.post("/ia/redactar", {
+        detalles: mejorarTexto,
+      });
+
+      if (data.success && data.redaccion) {
+        setTextoMejorado(data.redaccion);
+      } else {
+        throw new Error("No se pudo generar una mejora válida");
+      }
+    } catch (error) {
+      console.error(error);
+      Swal.fire({
+        title: "Error",
+        text:
+          error.response?.data?.message ??
+          "Ocurrió un error al mejorar el texto con IA",
+        icon: "error",
+        confirmButtonColor: "#5C0655",
+      });
+    } finally {
+      setMejorando(false);
+    }
+  };
 
   /* ----------------------------- fetch ----------------------------------- */
   const fetchNews = async () => {
@@ -405,7 +451,7 @@ const NoticiasAdmin = () => {
                           <td className="table-cell">
                             <div className="image-container">
                               <img
-                                src={n.image_url || "/placeholder-avatar.png"} // ← usa image_url directo
+                                src={n.image_url || "/placeholder-avatar.png"}
                                 alt={n.title}
                                 className="table-image"
                                 onError={(e) => {
@@ -535,7 +581,90 @@ const NoticiasAdmin = () => {
         </section>
       </main>
 
-      {/* ───────── Modal ───────── */}
+      {/* ───────── Modal Mejorar Texto ───────── */}
+      <Modal
+        show={showMejorarModal}
+        onHide={() => setShowMejorarModal(false)}
+        size="lg"
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>
+            <i className="bi bi-magic me-2"></i>
+            Mejorar Texto con IA
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group className="mb-3">
+              <Form.Label>Tu descripción actual:</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
+                value={mejorarTexto}
+                onChange={(e) => setMejorarTexto(e.target.value)}
+                placeholder="Descripción que deseas mejorar"
+              />
+            </Form.Group>
+
+            <div className="d-flex justify-content-end mb-3">
+              <Button
+                variant="info"
+                onClick={mejorarTextoIA}
+                disabled={mejorando || !mejorarTexto.trim()}
+              >
+                {mejorando ? (
+                  <>
+                    <Spinner animation="border" size="sm" /> Mejorando...
+                  </>
+                ) : (
+                  <>
+                    <i className="bi bi-stars me-2" />
+                    Mejorar Texto
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {textoMejorado && (
+              <>
+                <Form.Group className="mb-3">
+                  <Form.Label>Texto mejorado:</Form.Label>
+                  <Form.Control
+                    as="textarea"
+                    rows={4}
+                    value={textoMejorado}
+                    readOnly
+                    className="bg-light"
+                  />
+                </Form.Group>
+
+                <div className="alert alert-info">
+                  <i className="bi bi-info-circle me-2"></i>
+                  Revisa la propuesta de mejora y aplícala si te parece adecuada
+                </div>
+              </>
+            )}
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            className="btn-secondary-custom"
+            onClick={() => setShowMejorarModal(false)}
+          >
+            Cancelar
+          </Button>
+
+          {textoMejorado && (
+            <Button variant="success" onClick={aplicarMejora}>
+              <i className="bi bi-check-circle me-2"></i>
+              Aplicar Mejora
+            </Button>
+          )}
+        </Modal.Footer>
+      </Modal>
+
+      {/* ───────── Modal Noticia ───────── */}
       <Modal show={showModal} onHide={handleClose} size="lg" centered>
         <Modal.Header closeButton>
           <Modal.Title>
@@ -576,6 +705,7 @@ const NoticiasAdmin = () => {
                 value={form.title}
                 onChange={handleChange}
                 placeholder="Título de la noticia"
+                required
               />
             </Form.Group>
 
@@ -590,6 +720,19 @@ const NoticiasAdmin = () => {
                 onChange={handleChange}
                 placeholder="Descripción breve"
               />
+
+              {/* Botón para abrir modal de mejora */}
+              <div className="d-flex justify-content-end mt-2">
+                <Button
+                  variant="outline-info"
+                  size="sm"
+                  onClick={abrirModalMejorar}
+                  disabled={!form.description.trim()}
+                >
+                  <i className="bi bi-magic me-1"></i>
+                  Mejorar con IA
+                </Button>
+              </div>
             </Form.Group>
 
             {/* URL + Estado */}

@@ -26,6 +26,12 @@ const links = [
     color: "success",
   },
   {
+    to: "/admin/directivas",
+    icon: "people",
+    label: "Juntas Directivas",
+    color: "purple",
+  },
+  {
     to: "/admin/decanos",
     icon: "award",
     label: "Past de Decanos",
@@ -37,12 +43,7 @@ const links = [
     label: "Convenios",
     color: "danger",
   },
-  {
-    to: "/admin/directivas",
-    icon: "people",
-    label: "Juntas Directivas",
-    color: "purple",
-  },
+
   {
     to: "/admin/centros",
     icon: "tree",
@@ -75,14 +76,14 @@ const Sidebar = ({ isOpen }) => {
       text: "Se cerrará tu sesión actual.",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#d33", // rojo Bootstrap Danger
-      cancelButtonColor: "#3085d6", // azul Bootstrap Primary
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
       confirmButtonText: "Sí, salir",
       cancelButtonText: "Cancelar",
       reverseButtons: true,
     }).then((result) => {
       if (result.isConfirmed) {
-        logout(); // ← tu función de cierre
+        logout();
         Swal.fire({
           icon: "success",
           title: "Sesión cerrada",
@@ -94,7 +95,6 @@ const Sidebar = ({ isOpen }) => {
   };
   return (
     <nav className={`modern-sidebar ${isOpen ? "open" : "closed"}`}>
-      {/* Header del sidebar sin botón hamburguesa */}
       <div className="sidebar-header px-3 py-2">
         <div className="sidebar-brand d-flex align-items-center">
           <div className="brand-icon me-2">
@@ -168,15 +168,13 @@ const Sidebar = ({ isOpen }) => {
                 <span className="user-name fw-semibold">
                   {user?.name || "Admin"}
                 </span>
-                <span className="user-role d-block small text-muted">
-                  Administrador
-                </span>
+                <span className="user-role d-block small ">Administrador</span>
               </div>
             </div>
             <div className="footer-actions d-flex align-items-center gap-2">
-              <button className="action-btn btn btn-sm" title="Administradores">
+              {/* <button className="action-btn btn btn-sm" title="Administradores">
                 <i className="bi bi-people"></i>
-              </button>
+              </button> */}
               <button
                 className="action-btn btn btn-sm"
                 title="Cerrar sesión"
@@ -188,8 +186,6 @@ const Sidebar = ({ isOpen }) => {
           </div>
         </div>
       )}
-
-      {/* Indicador de estado */}
     </nav>
   );
 };
