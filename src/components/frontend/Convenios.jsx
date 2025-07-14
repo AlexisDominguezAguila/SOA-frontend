@@ -35,10 +35,10 @@ const Convenios = () => {
           className="d-flex align-items-center justify-content-center text-center text-white py-5"
           style={{
             backgroundImage:
-              "linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://img.freepik.com/vector-gratis/diseno-banner-elegante-estilo-onda-color-violeta-moderno_1055-15296.jpg?semt=ais_hybrid&w=740')",
+              "linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://img.freepik.com/fotos-premium/diseno-fondo-desdibujado-gradiente-moderno-fot-publicidad_558873-44763.jpg')",
             backgroundSize: "cover",
             backgroundPosition: "center",
-            minHeight: "80vh",
+            minHeight: "90vh",
           }}
         >
           <div className="container">

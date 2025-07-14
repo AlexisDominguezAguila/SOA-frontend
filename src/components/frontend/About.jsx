@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import heroBg from "@/assets/images/banner.avif";
+import heroBg from "@/assets/images/banerCurso.avif";
 import Placeholder from "@/assets/images/doctor.webp";
 import Header from "@/components/common/Header";
 import Footer from "@/components/common/Footer";
@@ -86,7 +86,7 @@ const JuntaDirectiva = () => {
             backgroundImage: `url(${heroBg})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
-            minHeight: "80vh",
+            minHeight: "90vh",
             position: "relative",
           }}
         >

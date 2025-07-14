@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Spinner } from "react-bootstrap";
-import heroBg from "@/assets/images/BannerDecano.jpg";
+import heroBg from "@/assets/images/banerCurso.avif";
 import Header from "@/components/common/Header";
 import Footer from "@/components/common/Footer";
 import api from "@/services/api";
@@ -113,7 +113,7 @@ const Decanos = () => {
                     className="position-relative mb-4"
                     style={{ maxWidth: "300px", margin: "0 auto" }}
                   >
-                    <h2 className="fs-1 mb-0">Decano</h2>
+                    <h2 className="fs-1 mb-0">Decano en Gestión</h2>
                     <div
                       className="position-absolute bottom-0 left-0 w-100 bg-warning"
                       style={{ height: "4px", transform: "translateY(10px)" }}

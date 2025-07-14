@@ -67,7 +67,7 @@ const News = () => {
           backgroundImage: `url(${hero.img})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
-          minHeight: "80vh",
+          minHeight: "90vh",
           position: "relative",
         }}
       >

@@ -17,6 +17,7 @@ import DashboardSidebar from "@/components/common/Sidebar";
 import api from "@/services/api";
 import Swal from "sweetalert2";
 import "@/components/backend/layout/dashboard.scss";
+import "@/components/backend/layout/noticias.scss";
 
 /* ---------------------------------------------------------------------------
  |  CONSTANTES Y UTILIDADES                                                   |
@@ -610,6 +611,7 @@ const NoticiasAdmin = () => {
             <div className="d-flex justify-content-end mb-3">
               <Button
                 variant="info"
+                className="btn-ia-news"
                 onClick={mejorarTextoIA}
                 disabled={mejorando || !mejorarTexto.trim()}
               >
@@ -724,7 +726,7 @@ const NoticiasAdmin = () => {
               {/* Botón para abrir modal de mejora */}
               <div className="d-flex justify-content-end mt-2">
                 <Button
-                  variant="outline-info"
+                  className="btn-ia-news"
                   size="sm"
                   onClick={abrirModalMejorar}
                   disabled={!form.description.trim()}

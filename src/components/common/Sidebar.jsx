@@ -44,12 +44,12 @@ const links = [
     color: "danger",
   },
 
-  {
-    to: "/admin/centros",
-    icon: "tree",
-    label: "Centros Recreacionales",
-    color: "teal",
-  },
+  // {
+  //   to: "/admin/centros",
+  //   icon: "tree",
+  //   label: "Centros Recreacionales",
+  //   color: "teal",
+  // },
   {
     to: "/admin/comunicados",
     icon: "megaphone",

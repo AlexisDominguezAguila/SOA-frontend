@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import api from "@/services/api";
 
-import BannerNew from "@/assets/images/BannerCursos.jpg";
+import BannerNew from "@/assets/images/banerCurso.avif";
 import CursoPlaceholder from "@/assets/images/curso.jpg";
 import { Container, Row, Col, Spinner } from "react-bootstrap";
 import "bootstrap-icons/font/bootstrap-icons.css";
@@ -50,7 +50,7 @@ const Cursos = () => {
               backgroundImage: `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url(${BannerNew})`,
               backgroundSize: "cover",
               backgroundPosition: "center",
-              minHeight: "80vh",
+              minHeight: "90vh",
               display: "flex",
               alignItems: "center",
             }}
@@ -126,19 +126,21 @@ const Cursos = () => {
               <Row>
                 {cursos.map((curso) => (
                   <Col md={3} key={curso.id} className="mb-4">
-                    <div className="card h-100 shadow-sm">
+                    <div className="card h-100 shadow-sm d-flex flex-column">
                       <img
                         src={curso.image_url || CursoPlaceholder}
                         alt={curso.title}
                         className="card-img-top"
                         style={{ height: "200px", objectFit: "cover" }}
                       />
-                      <div className="card-body">
+                      <div className="card-body d-flex flex-column">
                         <h5 className="card-title">{curso.title}</h5>
-                        <p className="card-text">{curso.description}</p>
+                        <p className="card-text flex-grow-1">
+                          {curso.description}
+                        </p>
                         <a
                           href={curso.url}
-                          className="btn btn-primary w-100"
+                          className="btn btn-primary w-100 mt-auto"
                           target="_blank"
                           rel="noopener noreferrer"
                         >

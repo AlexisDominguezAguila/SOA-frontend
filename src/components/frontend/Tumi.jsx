@@ -1,8 +1,10 @@
 import { Carousel } from "react-bootstrap";
 
-import tumi1 from "@/assets/images/tumi1.jpg";
-import tumi2 from "@/assets/images/tumi2.png";
-import tumi3 from "@/assets/images/tumi3.png";
+import tumi1 from "@/assets/images/tumi1.webp";
+import tumi2 from "@/assets/images/tumi2.webp";
+import tumi3 from "@/assets/images/tumi3.webp";
+import tumi4 from "@/assets/images/tumi4.webp";
+import tumi5 from "@/assets/images/tumi5.webp";
 import doctor from "@/assets/images/doctora.webp";
 import Header from "@/components/common/Header";
 import Footer from "@/components/common/Footer";
@@ -20,7 +22,7 @@ const Tumi = () => {
               "linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://tumiscriiilima.com/wp-content/uploads/2023/01/portada3.jpg')",
             backgroundSize: "cover",
             backgroundPosition: "center",
-            minHeight: "80vh",
+            minHeight: "90vh",
           }}
         >
           <div className="container">
@@ -38,7 +40,7 @@ const Tumi = () => {
               {/* Slider */}
               <div className="col-lg-6">
                 <Carousel fade indicators={false} controls={true}>
-                  {[tumi1, tumi2, tumi3].map((img, i) => (
+                  {[tumi1, tumi2, tumi3, tumi4, tumi5].map((img, i) => (
                     <Carousel.Item key={i}>
                       <img
                         src={img}
